@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(git add CLAUDE.md .claude/commands/ .claude/settings.local.json .specify/ docs/)"
+    ]
+  }
+}

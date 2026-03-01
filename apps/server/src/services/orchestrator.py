@@ -120,7 +120,7 @@ class DemoOrchestrator:
                            color="red")
             return
 
-        self.state.log("orchestrator", "init", f"Using video: {video_path}")
+        self.state.log("orchestrator", "init", f"Video: {os.path.basename(video_path)}")
 
         # Extract PCM audio (cached — re-extracts only if video is newer)
         pcm_path = os.path.splitext(video_path)[0] + "_audio.pcm"
@@ -214,9 +214,26 @@ class DemoOrchestrator:
         segment_index = data["segment_index"]
 
         self.state.log("voice", "transcript_committed",
-                       f"[{feed_id}] Committed ({language}): {text[:80]}...",
+                       f"[{feed_id}] ({language}): {text[:80]}...",
                        color="green")
         self.state.update_state(caller_count=self._transcript_count)
+
+        # Write raw transcript to Supabase IMMEDIATELY so it appears in
+        # the Scene Audio feed before agent processing starts
+        try:
+            self.deps.supabase.table("transcripts").insert({
+                "case_id": self.deps.case_id,
+                "caller_id": f"scene_{feed_id.lower()}",
+                "caller_label": f"Scene Audio ({feed_id})",
+                "language": language or "unknown",
+                "original_text": text,
+                "confidence": 0.9,
+                "segment_index": segment_index,
+                "feed_id": feed_id,
+                "direction": "inbound",
+            }).execute()
+        except Exception as e:
+            logger.debug(f"Immediate transcript insert error: {e}")
 
         # Launch pipeline as concurrent task — don't block audio streaming
         task = asyncio.create_task(
@@ -247,7 +264,7 @@ class DemoOrchestrator:
             # 1. Translate to English
             translated = await translate_to_english(text, language, self.deps.mistral_client)
             self.state.log("voice", "translated",
-                           f"[{feed_id}] EN: {translated[:80]}...",
+                           f"[{feed_id}] → {translated[:60]}",
                            color="blue")
 
             # 2. Extract intake facts
@@ -257,23 +274,14 @@ class DemoOrchestrator:
             )
             facts = facts_result.output
             self.state.log("intake", "facts_extracted",
-                           f"Location: {facts.location_raw}, Type: {facts.incident_type_candidate}",
+                           f"{facts.incident_type_candidate or '—'} @ {facts.location_raw or 'unknown location'}",
                            color="blue")
 
-            # 3. Write transcript to Supabase (with facts)
-            self.deps.supabase.table("transcripts").insert({
-                "case_id": self.deps.case_id,
-                "caller_id": f"scene_{feed_id.lower()}",
-                "caller_label": f"Scene Audio ({feed_id})",
-                "language": language,
-                "original_text": text,
+            # 3. Update the existing transcript row with translation + facts
+            self.deps.supabase.table("transcripts").update({
                 "translated_text": translated if language != "en" else None,
-                "confidence": 0.9,
-                "segment_index": segment_index,
-                "feed_id": feed_id,
-                "direction": "inbound",
                 "facts_extracted": facts.model_dump(),
-            }).execute()
+            }).eq("case_id", self.deps.case_id).eq("segment_index", segment_index).execute()
 
             # 4. Update incident state with facts
             update_kwargs = {}
@@ -637,42 +645,20 @@ class DemoOrchestrator:
         for corr in fusion.corroborations:
             # Classify modalities involved
             source_types = set()
-            source_lines = []
             for src in corr.sources:
                 src_type = src.get("type", "unknown")
-                conf = src.get("confidence", 0.0)
                 if "vision" in src_type.lower() or "cctv" in src_type.lower():
-                    source_types.add("vision")
-                    # Include frame timestamp if available
-                    frame_t = f"T+{VISION_FRAME_2_S:.0f}s" if vision_frame else ""
-                    source_lines.append(
-                        f"Vision: {corr.claim.upper()} ({conf:.2f})"
-                        + (f" at frame {frame_t}" if frame_t else "")
-                    )
+                    source_types.add("CCTV")
                 else:
-                    source_types.add("audio")
-                    lang = src.get("language", src_type)
-                    source_lines.append(
-                        f"Audio: {lang.upper()} speaker reported {corr.claim.lower()} ({conf:.2f})"
-                    )
+                    source_types.add("Audio")
 
             is_cross_modal = len(source_types) >= 2
-            n_modalities = len(source_types)
-            event_type = "CROSS_MODAL_CORROBORATION" if is_cross_modal else "CORROBORATION"
+            event_type = "CROSS_MODAL" if is_cross_modal else "CORROBORATION"
+            tag = "🔗" if is_cross_modal else "✓"
+            sources_str = " + ".join(sorted(source_types))
+            conf_pct = f"{corr.combined_confidence * 100:.0f}%" if corr.combined_confidence else ""
 
-            # Build the rich message
-            lines = [
-                f"{corr.claim.upper()} confirmed by {n_modalities} independent "
-                f"{'modalities' if is_cross_modal else 'sources'}:",
-            ]
-            for sl in source_lines:
-                lines.append(f"  → {sl}")
-
-            # Note autonomous action if evacuation triggered
-            if fusion.evacuation_warning_required:
-                lines.append("Autonomous evacuation protocol triggered.")
-
-            message = "\n".join(lines)
+            message = f"{tag} {corr.claim.upper()} ({sources_str}, {conf_pct})"
 
             # Structured data for frontend rendering
             data = {
@@ -691,16 +677,26 @@ class DemoOrchestrator:
                 message,
                 data=data,
                 color="green" if not fusion.evacuation_warning_required else "red",
-                flash=True,
+                flash=is_cross_modal,
                 model="mistral-large-latest",
             )
 
-        # Log the fusion reasoning
+        # Log evacuation trigger once (not per corroboration)
+        if fusion.evacuation_warning_required:
+            self.state.log("evidence_fusion", "EVACUATION",
+                           "Autonomous evacuation protocol triggered",
+                           color="red", flash=True)
+
+        # Log truncated reasoning
         if fusion.reasoning:
+            # Keep just first 200 chars for demo readability
+            short = fusion.reasoning[:200].replace("\n", " ").strip()
+            if len(fusion.reasoning) > 200:
+                short += "..."
             self.state.log(
                 "evidence_fusion",
                 "reasoning",
-                fusion.reasoning,
+                short,
                 data={"severity_delta": fusion.severity_delta},
                 color="purple",
                 model="mistral-large-latest",

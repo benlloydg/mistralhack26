@@ -211,13 +211,14 @@ export function Dashboard() {
         <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
           <div className="flex-1 min-h-0">
             {/* Pass transcripts down to ResponseLanes to render outbound broadcasts */}
-            <ResponseLanes 
-               dispatches={dispatches} 
+            <ResponseLanes
+               dispatches={dispatches}
                transcripts={transcripts}
                recommendedUnits={incidentState?.recommended_units || []}
                onFirstExecute={handleApprove}
                onBroadcastStateChange={setIsBroadcasting}
                isResolved={incidentState?.status === 'resolved_demo'}
+               caseId={activeCaseId}
             />
           </div>
         </div>

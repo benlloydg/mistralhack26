@@ -121,7 +121,14 @@ export function CCTVPanel({
           crossOrigin="anonymous"
           playsInline 
           onTimeUpdate={(e) => setVideoTime(e.currentTarget.currentTime)}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none ${audioInitialized ? 'opacity-60 dark:opacity-40' : 'opacity-0'}`}
+          onClick={(e) => {
+            if (e.currentTarget.paused) {
+              e.currentTarget.play();
+            } else {
+              e.currentTarget.pause();
+            }
+          }}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 cursor-pointer ${audioInitialized ? 'opacity-60 dark:opacity-40' : 'opacity-0'}`}
         />
         
         {/* Audio Initialization Overlay (Browser Policy Requirement) */}

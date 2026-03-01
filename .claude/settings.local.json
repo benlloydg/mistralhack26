@@ -129,7 +129,8 @@
       "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mp4 2>/dev/null && echo \"---\" && ffmpeg -ss 25 -i assets/scene.mp4 -frames:v 1 -f image2 -c:v mjpeg -q:v 2 pipe:1 2>/dev/null | wc -c)",
       "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mp4 /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mov 2>/dev/null)",
       "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.pcm 2>/dev/null)",
-      "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mp4 2>/dev/null)"
+      "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mp4 2>/dev/null)",
+      "Bash(uv run python -c \"\nfrom elevenlabs import CommitStrategy\nprint\\('CommitStrategy members:'\\)\nfor name in dir\\(CommitStrategy\\):\n    if not name.startswith\\('_'\\):\n        print\\(f'  {name} = {getattr\\(CommitStrategy, name\\)}'\\)\n\")"
     ]
   }
 }

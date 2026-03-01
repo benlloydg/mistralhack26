@@ -3,20 +3,22 @@ import { cn } from "@/lib/utils";
 import { Check, Clock, Navigation, Volume2, Radio, Play, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
-export function ResponseLanes({ 
-  dispatches, 
+export function ResponseLanes({
+  dispatches,
   transcripts = [],
   recommendedUnits = [],
   onFirstExecute,
   onBroadcastStateChange,
-  isResolved
-}: { 
-  dispatches: Dispatch[], 
+  isResolved,
+  caseId
+}: {
+  dispatches: Dispatch[],
   transcripts?: Transcript[],
   recommendedUnits?: string[],
   onFirstExecute?: () => void,
   onBroadcastStateChange?: (isPlaying: boolean) => void,
-  isResolved?: boolean
+  isResolved?: boolean,
+  caseId?: string | null
 }) {
   const [executingUnits, setExecutingUnits] = useState<Record<string, 'executing' | 'done'>>({});
   const [broadcastState, setBroadcastState] = useState<'ready' | 'playing' | 'sent'>('ready');
@@ -251,8 +253,10 @@ export function ResponseLanes({
               <span className="text-blue-500 font-bold">📋</span>
               <span className="font-mono text-[11px] font-bold tracking-widest uppercase text-blue-500">After-Action Report</span>
             </div>
-            <a 
-              href="/report/demo"
+            <a
+              href={`http://localhost:8000/report/${caseId || 'demo'}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-[10px] uppercase font-mono font-bold tracking-widest bg-blue-500 hover:bg-blue-400 text-white px-3 py-1.5 rounded-sm shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all flex items-center gap-1.5 min-w-[100px] justify-center"
             >
               <span className="animate-[pulse_2s_ease-in-out_infinite] inline-block">[GENERATE]</span>

@@ -92,7 +92,7 @@ class ScribeRealtimeService:
                 model_id="scribe_v2_realtime",
                 audio_format=AudioFormat.PCM_16000,
                 sample_rate=SAMPLE_RATE,
-                commit_strategy=CommitStrategy.MANUAL,
+                commit_strategy=CommitStrategy.VAD,
                 include_timestamps=True,
             )
         )
@@ -170,7 +170,7 @@ class ScribeRealtimeService:
     async def stream_audio(self, pcm_path: str):
         """
         Stream PCM file to Scribe v2 in 250ms chunks, paced to real-time.
-        Commits after detecting silence gaps in the audio.
+        Scribe VAD handles commits automatically based on speech pauses.
         """
         await self._connected.wait()
 
@@ -180,11 +180,8 @@ class ScribeRealtimeService:
         print(f"[SCRIBE] Streaming audio: {pcm_path} ({file_size} bytes, {total_duration:.1f}s, {total_chunks} chunks)")
         logger.info(f"Streaming audio: {pcm_path}")
 
-        silence_count = 0
-        has_speech_since_commit = False
         stream_start = time.time()
         chunk_index = 0
-        commit_count = 0
 
         with open(pcm_path, "rb") as f:
             while True:
@@ -212,32 +209,9 @@ class ScribeRealtimeService:
                 if chunk_index % 4 == 0:
                     print(f"[SCRIBE] Chunk {chunk_index}/{total_chunks} sent (T+{elapsed:.1f}s)")
 
-                # Silence detection for manual commit
-                is_silent = _is_silence(chunk)
-                if is_silent:
-                    silence_count += 1
-                else:
-                    silence_count = 0
-                    has_speech_since_commit = True
-
-                # Commit after sustained silence following speech
-                if silence_count >= SILENCE_CHUNKS_FOR_COMMIT and has_speech_since_commit:
-                    commit_count += 1
-                    print(f"[SCRIBE] >>> COMMIT #{commit_count} at chunk {chunk_index} (T+{elapsed:.1f}s) — silence detected after speech")
-                    await self._connection.commit()
-                    has_speech_since_commit = False
-                    silence_count = 0
-
-        # Final commit for any remaining audio
-        if has_speech_since_commit:
-            commit_count += 1
-            print(f"[SCRIBE] >>> FINAL COMMIT #{commit_count} — end of audio")
-            await self._connection.commit()
-
         total_time = time.time() - stream_start
-        print(f"[SCRIBE] Audio streaming complete: {chunk_index} chunks, {commit_count} commits in {total_time:.1f}s")
-
-        logger.info(f"Audio streaming complete. {chunk_index} chunks sent in {time.time() - stream_start:.1f}s")
+        print(f"[SCRIBE] Audio streaming complete: {chunk_index} chunks in {total_time:.1f}s")
+        logger.info(f"Audio streaming complete. {chunk_index} chunks sent in {total_time:.1f}s")
 
     async def disconnect(self):
         """Close the WebSocket connection."""

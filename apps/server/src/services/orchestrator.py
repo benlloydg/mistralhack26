@@ -50,7 +50,7 @@ def detect_video() -> str | None:
     return None
 
 # Vision: continuous frame analysis every N seconds
-VISION_START_S = 3.0      # Start vision analysis 3s into video
+VISION_START_S = 1.0      # Start vision analysis 1s into video — speed is critical
 VISION_INTERVAL_S = 3.0   # Analyze a frame every 3 seconds
 # No max frames — runs until video ends or demo is cancelled
 
@@ -339,20 +339,24 @@ class DemoOrchestrator:
                            flash=triage.severity in (Severity.HIGH, Severity.CRITICAL))
 
             # ── PHASE 3b: Proactive dispatch — generate briefs for NEW units immediately ──
+            # No severity gate — dispatch as soon as triage recommends ANY units
             new_units = [u for u in triage.recommended_units if u not in self._dispatched_units]
-            if new_units and triage.severity in (Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL):
+            if new_units:
                 asyncio.create_task(
                     self._dispatch_units(new_units),
                     name=f"dispatch_{segment_index}",
                 )
 
             # ── PHASE 3c: Deterministic evacuation check ──
-            # Trigger evacuation as soon as smoke or fire is detected — don't wait for LLM
+            # Trigger evacuation on ANY fire/smoke-related hazard — broad matching
             if not self._evacuation_sent:
-                hazard_present = any(h in merged_hazards for h in ("smoke", "engine_fire", "fire", "explosion"))
+                all_hazards_lower = " ".join(merged_hazards).lower()
+                hazard_present = any(kw in all_hazards_lower for kw in (
+                    "smoke", "fire", "flame", "explosion", "blaze", "burn", "hazmat",
+                ))
                 if hazard_present:
                     self.state.log("orchestrator", "evacuation_trigger",
-                                   f"HAZARD DETECTED ({', '.join(h for h in merged_hazards if h in ('smoke', 'engine_fire', 'fire', 'explosion'))}) — triggering evacuation protocol",
+                                   f"HAZARD DETECTED — triggering evacuation protocol",
                                    color="red", flash=True)
                     asyncio.create_task(self._send_evacuation_warnings())
 
@@ -655,14 +659,18 @@ class DemoOrchestrator:
     async def _dispatch_units(self, units: list[str]):
         """
         Generate dispatch briefs for new units IMMEDIATELY after triage.
-        This runs as a background task so it doesn't block the transcript pipeline.
+        All units dispatched in PARALLEL for speed.
         Each unit only gets dispatched once (tracked via _dispatched_units).
         """
-        state = self.state.get_state()
-        for unit in units:
-            if unit in self._dispatched_units:
-                continue
-            self._dispatched_units.add(unit)
+        to_dispatch = [u for u in units if u not in self._dispatched_units]
+        if not to_dispatch:
+            return
+        # Mark all as in-flight immediately to prevent duplicate dispatch
+        for u in to_dispatch:
+            self._dispatched_units.add(u)
+
+        async def _dispatch_one(unit: str):
+            state = self.state.get_state()
             try:
                 dispatch_result = await dispatch_agent.run(
                     f"Generate dispatch brief for {unit}. "
@@ -693,7 +701,10 @@ class DemoOrchestrator:
                                color="green", flash=True)
             except Exception as e:
                 logger.error(f"Dispatch error for {unit}: {e}")
-                self._dispatched_units.discard(unit)  # Allow retry
+                self._dispatched_units.discard(unit)
+
+        # Launch ALL dispatch calls in parallel
+        await asyncio.gather(*[_dispatch_one(u) for u in to_dispatch], return_exceptions=True)
 
     # ----------------------------------------------------------------
     # Post-audio finalization

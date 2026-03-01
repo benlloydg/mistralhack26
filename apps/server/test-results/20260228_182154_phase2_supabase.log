@@ -1,0 +1,84 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.2, pluggy-1.6.0 -- /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server
+configfile: pyproject.toml
+plugins: anyio-4.12.1, logfire-4.25.0, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=session
+collecting ... collected 5 items
+
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_create_and_read_incident [0.271s] Create incident record
+[0.069s] Read incident back
+
+============================================================
+TOTAL ELAPSED: [0.341s]
+  [0.271s] Create incident record
+  [0.069s] Read incident back
+============================================================
+PASSED
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_update_severity [0.204s] Create incident
+[0.124s] Read initial state
+[0.168s] Update severity to HIGH
+[0.103s] Verify state persisted
+
+============================================================
+TOTAL ELAPSED: [0.704s]
+  [0.204s] Create incident
+  [0.124s] Read initial state
+  [0.168s] Update severity to HIGH
+  [0.103s] Verify state persisted
+============================================================
+PASSED
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_write_agent_log [0.285s] Create incident for log test
+[0.090s] Write agent log entry
+[0.173s] Verify log in database
+
+============================================================
+TOTAL ELAPSED: [0.547s]
+  [0.285s] Create incident for log test
+  [0.090s] Write agent log entry
+  [0.173s] Verify log in database
+============================================================
+PASSED
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_append_timeline [0.168s] Create incident for timeline test
+[0.209s] Append timeline event
+[0.113s] Verify timeline in state
+
+============================================================
+TOTAL ELAPSED: [0.490s]
+  [0.168s] Create incident for timeline test
+  [0.209s] Append timeline event
+  [0.113s] Verify timeline in state
+============================================================
+PASSED
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_convenience_log [0.167s] Create incident for convenience log test
+[0.330s] Use log() convenience method
+[0.138s] Verify both log and timeline
+
+============================================================
+TOTAL ELAPSED: [0.635s]
+  [0.167s] Create incident for convenience log test
+  [0.330s] Use log() convenience method
+  [0.138s] Verify both log and timeline
+============================================================
+PASSED
+
+=============================== warnings summary ===============================
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_create_and_read_incident
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_update_severity
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_write_agent_log
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_append_timeline
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_convenience_log
+  /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/.venv/lib/python3.12/site-packages/supabase/_sync/client.py:309: DeprecationWarning: The 'timeout' parameter is deprecated. Please configure it in the http client instead.
+    return SyncPostgrestClient(
+
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_create_and_read_incident
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_update_severity
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_write_agent_log
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_append_timeline
+src/tests/test_phase2_supabase.py::TestSupabaseStateManager::test_convenience_log
+  /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/.venv/lib/python3.12/site-packages/supabase/_sync/client.py:309: DeprecationWarning: The 'verify' parameter is deprecated. Please configure it in the http client instead.
+    return SyncPostgrestClient(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 5 passed, 10 warnings in 5.22s ========================

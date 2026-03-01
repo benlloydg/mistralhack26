@@ -71,6 +71,7 @@ class DemoOrchestrator:
         self._transcript_count = 0
         self._pipeline_tasks: list[asyncio.Task] = []
         self._evacuation_sent = False
+        self._dispatched_units: set[str] = set()  # Track already-dispatched unit types
         self._scribe: ScribeRealtimeService | None = None
 
     def approve(self):
@@ -337,6 +338,24 @@ class DemoOrchestrator:
                            color="amber" if triage.severity in (Severity.MEDIUM, Severity.HIGH) else "red",
                            flash=triage.severity in (Severity.HIGH, Severity.CRITICAL))
 
+            # ── PHASE 3b: Proactive dispatch — generate briefs for NEW units immediately ──
+            new_units = [u for u in triage.recommended_units if u not in self._dispatched_units]
+            if new_units and triage.severity in (Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL):
+                asyncio.create_task(
+                    self._dispatch_units(new_units),
+                    name=f"dispatch_{segment_index}",
+                )
+
+            # ── PHASE 3c: Deterministic evacuation check ──
+            # Trigger evacuation as soon as smoke or fire is detected — don't wait for LLM
+            if not self._evacuation_sent:
+                hazard_present = any(h in merged_hazards for h in ("smoke", "engine_fire", "fire", "explosion"))
+                if hazard_present:
+                    self.state.log("orchestrator", "evacuation_trigger",
+                                   f"HAZARD DETECTED ({', '.join(h for h in merged_hazards if h in ('smoke', 'engine_fire', 'fire', 'explosion'))}) — triggering evacuation protocol",
+                                   color="red", flash=True)
+                    asyncio.create_task(self._send_evacuation_warnings())
+
             # ── PHASE 4: Evidence fusion — DEFERRED to background ──
             # Not on critical path. Evacuation warnings still fire if needed.
             if self._transcript_count >= 2:
@@ -482,6 +501,18 @@ class DemoOrchestrator:
                 hazards = list(set(hazards + ["engine_fire"]))
             self.state.update_state(vision_detections=detections, hazard_flags=hazards)
 
+            # Deterministic evacuation: trigger as soon as vision sees smoke or fire
+            if not self._evacuation_sent and (analysis.smoke_visible or analysis.fire_visible):
+                detected = []
+                if analysis.smoke_visible:
+                    detected.append("smoke")
+                if analysis.fire_visible:
+                    detected.append("fire")
+                self.state.log("vision", "evacuation_trigger",
+                               f"VISION CONFIRMS {', '.join(detected).upper()} — triggering evacuation",
+                               color="red", flash=True)
+                asyncio.create_task(self._send_evacuation_warnings())
+
             # Detect escalation via scene delta
             if prev_analysis:
                 delta = compute_scene_delta(prev_analysis, analysis)
@@ -618,39 +649,26 @@ class DemoOrchestrator:
                        color="red", flash=True)
 
     # ----------------------------------------------------------------
-    # Post-audio finalization
+    # Proactive dispatch — generates briefs as soon as triage recommends
     # ----------------------------------------------------------------
 
-    async def _post_audio_finalize(self):
-        """After audio stream completes: approval, dispatch, summary."""
-
-        # Enable approve button
-        self._update_demo_control("awaiting_approval", approve_enabled=True)
-        self.state.log("orchestrator", "awaiting_approval",
-                       "Awaiting operator approval for dispatch...",
-                       color="amber", flash=True)
-
-        # Wait for approval (or timeout)
-        try:
-            await asyncio.wait_for(self._approved.wait(), timeout=30.0)
-        except asyncio.TimeoutError:
-            self.state.log("orchestrator", "auto_approved",
-                           "Auto-approved (timeout)", color="amber")
-
-        self._update_demo_control("approved", approve_clicked=True)
-
-        # Confirm recommended units
+    async def _dispatch_units(self, units: list[str]):
+        """
+        Generate dispatch briefs for new units IMMEDIATELY after triage.
+        This runs as a background task so it doesn't block the transcript pipeline.
+        Each unit only gets dispatched once (tracked via _dispatched_units).
+        """
         state = self.state.get_state()
-        self.state.update_state(confirmed_units=state.recommended_units)
-        self.state.log("orchestrator", "approved",
-                       "Operator confirmed dispatch", color="green", flash=True)
-
-        # Generate dispatch briefs for confirmed units
-        for unit in state.recommended_units:
+        for unit in units:
+            if unit in self._dispatched_units:
+                continue
+            self._dispatched_units.add(unit)
             try:
                 dispatch_result = await dispatch_agent.run(
                     f"Generate dispatch brief for {unit}. "
-                    f"Incident: {state.incident_type} at {state.location_normalized}.",
+                    f"Incident: {state.incident_type or 'vehicle collision'} "
+                    f"at {state.location_normalized or 'unknown location'}. "
+                    f"Severity: {state.severity}.",
                     deps=self.deps,
                 )
                 brief = dispatch_result.output
@@ -664,7 +682,7 @@ class DemoOrchestrator:
                     "unit_assigned": brief.unit_assigned,
                     "destination": brief.destination,
                     "eta_minutes": brief.eta_minutes,
-                    "status": "confirmed",
+                    "status": "dispatched",
                     "voice_message": brief.voice_message,
                     "rationale": brief.rationale,
                     "audio_url": audio_url,
@@ -672,9 +690,32 @@ class DemoOrchestrator:
                 self.state.log("dispatch", "unit_dispatched",
                                f"{unit} dispatched: {brief.unit_assigned}",
                                data={"audio_url": audio_url},
-                               color="green")
+                               color="green", flash=True)
             except Exception as e:
                 logger.error(f"Dispatch error for {unit}: {e}")
+                self._dispatched_units.discard(unit)  # Allow retry
+
+    # ----------------------------------------------------------------
+    # Post-audio finalization
+    # ----------------------------------------------------------------
+
+    async def _post_audio_finalize(self):
+        """After audio stream completes: confirm dispatched units, generate summary."""
+
+        # Confirm all dispatched units
+        state = self.state.get_state()
+        self.state.update_state(confirmed_units=list(self._dispatched_units))
+
+        # Dispatch any remaining recommended units that haven't been dispatched yet
+        remaining = [u for u in state.recommended_units if u not in self._dispatched_units]
+        if remaining:
+            self.state.log("orchestrator", "dispatching_remaining",
+                           f"Dispatching {len(remaining)} remaining units: {', '.join(remaining)}",
+                           color="amber")
+            await self._dispatch_units(remaining)
+
+        self.state.log("orchestrator", "dispatch_complete",
+                       "All units dispatched", color="green", flash=True)
 
         # Final summary
         state = self.state.get_state()
@@ -682,14 +723,14 @@ class DemoOrchestrator:
             f"Incident: {state.incident_type or 'Unknown'} at {state.location_normalized or 'Unknown'}. "
             f"Severity: {state.severity.upper()}. "
             f"{state.caller_count} audio segments processed. "
-            f"{len(state.confirmed_units)} units confirmed, "
-            f"{len(state.recommended_units)} total recommended."
+            f"{len(self._dispatched_units)} units dispatched."
         )
         if state.hazard_flags:
             summary += f" Hazards: {', '.join(state.hazard_flags)}."
         self.state.update_state(
             status=IncidentStatus.RESOLVED_DEMO.value,
             operator_summary=summary,
+            confirmed_units=list(self._dispatched_units),
         )
 
     # ----------------------------------------------------------------

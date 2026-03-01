@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  
+  --color-surface: #0d0d0d;
+  --color-border: #1a1a1a;
+  
+  --color-iris-align: #3b82f6;     /* blue-500 */
+  --color-iris-explore: #10b981;   /* emerald-500 */
+  --color-iris-define: #8b5cf6;    /* purple-500 */
+  --color-iris-ship: #f59e0b;      /* amber-500 */
+}
+
+@layer utilities {
+  .tech-border {
+    @apply border dark:border-white/10 border-black/10 rounded-sm;
+  }
+  .tech-glass {
+    @apply dark:bg-[#0a0a0a]/80 bg-white/80 backdrop-blur-md border dark:border-white/10 border-black/10 rounded-sm;
+  }
+}
+

@@ -1,0 +1,33 @@
+=== VISION PIPELINE TEST ===
+Model: pixtral-large-latest
+
+--- Frame 1 (t=58s) ---
+[0.34s] Extracted: 22,641 bytes
+[2.25s] Vision analysis
+  Description: CCTV FEED — SMOKE DETECTED
+  Smoke: True
+  Fire: False
+  Damage: none
+  Detections: [{'type': 'smoke', 'confidence': 0.9, 'bbox': None, 'count': None}]
+  PASS: smoke detected
+
+--- Frame 2 (t=66s) ---
+[0.18s] Extracted: 18,202 bytes
+[2.59s] Vision analysis
+  Description: CCTV FEED — FIRE DETECTED
+  Smoke: True
+  Fire: True
+  Damage: severe
+  Detections: [{'type': 'engine_fire', 'confidence': 0.95, 'bbox': None, 'count': None}]
+  PASS: fire detected
+
+--- Scene Delta ---
+  New hazard: engine_fire
+  Escalation: True
+  Delta: Scene delta: CCTV FEED — SMOKE DETECTED → CCTV FEED — FIRE DETECTED
+  PASS: hazard escalation detected
+
+============================================================
+TOTAL ELAPSED: [5.354s]
+ALL CHECKS PASSED
+============================================================

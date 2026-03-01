@@ -36,3 +36,7 @@ htmlcov/
 
 # uv
 uv.lock
+
+# Media Assets
+apps/server/assets/
+apps/web/public/video/

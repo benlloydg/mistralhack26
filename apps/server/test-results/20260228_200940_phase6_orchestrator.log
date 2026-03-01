@@ -1,0 +1,64 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.2, pluggy-1.6.0 -- /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server
+configfile: pyproject.toml
+plugins: anyio-4.12.1, logfire-4.25.0, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=session
+collecting ... collected 4 items
+
+src/tests/test_phase6_orchestrator.py::TestFastAPIServer::test_app_loads   Routes: ['/openapi.json', '/docs', '/docs/oauth2-redirect', '/redoc', '/api/v1/demo/start', '/api/v1/demo/approve', '/api/v1/demo/status', '/api/v1/demo/reset', '/api/v1/health', '/audio']
+[0.000s] Verify app loads
+
+============================================================
+TOTAL ELAPSED: [0.000s]
+  [0.000s] Verify app loads
+============================================================
+PASSED
+src/tests/test_phase6_orchestrator.py::TestFastAPIServer::test_health_check [1.313s] GET /api/v1/health
+  Status: healthy
+  supabase: ok (316ms)
+  mistral: ok (720ms)
+  elevenlabs: ok (272ms)
+[0.000s] Validate health response
+
+============================================================
+TOTAL ELAPSED: [1.314s]
+  [1.313s] GET /api/v1/health
+  [0.000s] Validate health response
+============================================================
+PASSED
+src/tests/test_phase6_orchestrator.py::TestFastAPIServer::test_demo_status_no_active [0.204s] GET /api/v1/demo/status
+  Response: {'id': '610fcf2c-fe80-4b31-a390-ae0b86f6da02', 'case_id': 'TN-2026-00417', 'status': 'critical', 'incident_type': 'vehicle_collision', 'location_raw': 'Market and 5th', 'location_normalized': 'Market St & 5th St', 'severity': 'critical', 'caller_count': 2, 'people_count_estimate': 3, 'injury_flags': ['trapped_occupant'], 'hazard_flags': ['child_present', 'trapped_occupant', 'engine_fire'], 'vision_detections': [{'label': 'smoke', 'confidence': 0.88, 'engine_fire': False}, {'label': 'engine fire', 'confidence': 0.99, 'engine_fire': True}], 'recommended_units': ['EMS', 'Traffic Control', 'Pediatric EMS', 'Fire Response'], 'confirmed_units': ['EMS', 'Traffic Control'], 'timeline': [], 'action_plan_version': 3, 'action_plan': [], 'match_confidence': None, 'operator_summary': None, 'confidence_scores': {}, 'created_at': '2026-03-01T03:33:45.078681+00:00', 'updated_at': '2026-03-01T03:33:59.879276+00:00'}
+[0.000s] Validate response
+
+============================================================
+TOTAL ELAPSED: [0.204s]
+  [0.204s] GET /api/v1/demo/status
+  [0.000s] Validate response
+============================================================
+PASSED
+src/tests/test_phase6_orchestrator.py::TestFastAPIServer::test_demo_approve_no_active [0.002s] POST /api/v1/demo/approve
+  Response: {'status': 'no_active_demo'}
+[0.000s] Validate response
+
+============================================================
+TOTAL ELAPSED: [0.002s]
+  [0.002s] POST /api/v1/demo/approve
+  [0.000s] Validate response
+============================================================
+PASSED
+
+=============================== warnings summary ===============================
+src/tests/test_phase6_orchestrator.py::TestFastAPIServer::test_health_check
+src/tests/test_phase6_orchestrator.py::TestFastAPIServer::test_demo_status_no_active
+  /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/.venv/lib/python3.12/site-packages/supabase/_sync/client.py:309: DeprecationWarning: The 'timeout' parameter is deprecated. Please configure it in the http client instead.
+    return SyncPostgrestClient(
+
+src/tests/test_phase6_orchestrator.py::TestFastAPIServer::test_health_check
+src/tests/test_phase6_orchestrator.py::TestFastAPIServer::test_demo_status_no_active
+  /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/.venv/lib/python3.12/site-packages/supabase/_sync/client.py:309: DeprecationWarning: The 'verify' parameter is deprecated. Please configure it in the http client instead.
+    return SyncPostgrestClient(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 4 passed, 4 warnings in 3.15s =========================

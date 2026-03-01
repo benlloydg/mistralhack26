@@ -10,3 +10,4 @@ class AgentLogEntry(BaseModel):
     data: dict = Field(default_factory=dict)
     display_color: str = "blue"
     display_flash: bool = False
+    model: str | None = None

@@ -73,8 +73,9 @@ Optional quality gates (use when appropriate):
 See `.specify/memory/constitution.md` for project principles and governance.
 
 ## Active Technologies
-- Python 3.12 + FastAPI 0.115+, pydantic 2.10+, pydantic-settings 2.6+, pydantic-ai[mistral] 0.2+, mistralai 1.12+, supabase 2.11+, httpx 0.28+, python-dotenv 1.0+ (001-backend-foundation)
-- Supabase (Postgres + Realtime) — 4 tables: incident_state, agent_logs, transcripts, dispatches (001-backend-foundation)
+- Python 3.12 + FastAPI 0.115+, pydantic 2.10+, pydantic-settings 2.6+, pydantic-ai[mistral] 0.2+, mistralai 1.12+, supabase 2.11+, httpx 0.28+, python-dotenv 1.0+, elevenlabs 2.37+ (001-backend-foundation, 001-scribe-v2)
+- Supabase (Postgres + Realtime) — 6 tables: incident_state, agent_logs, transcripts, dispatches, live_partials, demo_control (001-scribe-v2)
 
 ## Recent Changes
 - 001-backend-foundation: Added Python 3.12 + FastAPI 0.115+, pydantic 2.10+, pydantic-settings 2.6+, pydantic-ai[mistral] 0.2+, mistralai 1.12+, supabase 2.11+, httpx 0.28+, python-dotenv 1.0+
+- 001-scribe-v2-realtime: Added elevenlabs 2.37+ (Scribe v2 Realtime WebSocket), event-driven orchestrator, PCM audio extraction, Mistral translation, live_partials + demo_control tables

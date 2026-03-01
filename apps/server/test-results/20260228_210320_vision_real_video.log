@@ -1,0 +1,35 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.2, pluggy-1.6.0 -- /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server
+configfile: pyproject.toml
+plugins: anyio-4.12.1, logfire-4.25.0, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=session
+collecting ... collected 1 item
+
+src/tests/test_vision_real.py::TestVisionRealVideo::test_extract_and_analyze_frames FAILED
+
+=================================== FAILURES ===================================
+_____________ TestVisionRealVideo.test_extract_and_analyze_frames ______________
+
+self = <tests.test_vision_real.TestVisionRealVideo object at 0x1113e9220>
+timer = <tests.test_vision_real.TimedStep object at 0x1113e9160>
+
+    @pytest.mark.asyncio
+    async def test_extract_and_analyze_frames(self, timer):
+        """Extract frames from real crash video and analyze with Pixtral."""
+        from src.services.media import extract_frame
+        from src.agents.vision_agent import analyze_frame, compute_scene_delta
+        from mistralai import Mistral
+    
+>       assert os.path.exists(REAL_VIDEO), f"Video not found: {REAL_VIDEO}"
+E       AssertionError: Video not found: /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/src/tests/../../../../web/public/video/crash_01.mp4
+E       assert False
+E        +  where False = <function exists at 0x10ca6b9c0>('/Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/src/tests/../../../../web/public/video/crash_01.mp4')
+E        +    where <function exists at 0x10ca6b9c0> = <module 'posixpath' (frozen)>.exists
+E        +      where <module 'posixpath' (frozen)> = os.path
+
+src/tests/test_vision_real.py:78: AssertionError
+=========================== short test summary info ============================
+FAILED src/tests/test_vision_real.py::TestVisionRealVideo::test_extract_and_analyze_frames
+============================== 1 failed in 1.86s ===============================

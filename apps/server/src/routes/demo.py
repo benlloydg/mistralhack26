@@ -79,7 +79,8 @@ async def start_demo(background_tasks: BackgroundTasks):
 
     # Detect video so frontend can play the same file
     video_path = detect_video()
-    video_url = f"http://localhost:8000/assets/{os.path.basename(video_path)}" if video_path else None
+    # Cache-bust so browser always fetches the latest video file
+    video_url = f"http://localhost:8000/assets/{os.path.basename(video_path)}?t={int(time.time())}" if video_path else None
 
     return {"case_id": case_id, "status": "started", "video_url": video_url}
 

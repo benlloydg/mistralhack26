@@ -34,18 +34,19 @@ from ..models.incident import Severity, IncidentStatus
 
 logger = logging.getLogger(__name__)
 
-# Video asset directory
-ASSETS_DIR = "assets"
+# Video asset directory — absolute path so background tasks work regardless of cwd
+ASSETS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "assets")
 SUPPORTED_VIDEO_EXTENSIONS = (".mp4", ".mov", ".mkv", ".avi")
 
 
 def detect_video() -> str | None:
-    """Find the first video file in assets/. Returns path or None."""
-    if not os.path.isdir(ASSETS_DIR):
+    """Find the first video file in assets/. Returns absolute path or None."""
+    assets = os.path.abspath(ASSETS_DIR)
+    if not os.path.isdir(assets):
         return None
-    for f in sorted(os.listdir(ASSETS_DIR)):
+    for f in sorted(os.listdir(assets)):
         if f.lower().endswith(SUPPORTED_VIDEO_EXTENSIONS):
-            return os.path.join(ASSETS_DIR, f)
+            return os.path.join(assets, f)
     return None
 
 # Vision timestamps (seconds into video)

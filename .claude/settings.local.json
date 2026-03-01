@@ -125,7 +125,11 @@
       "Bash(cd /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server && uv run python -c \"from src.main import app; print\\(f'Routes: {len\\(app.routes\\)}'\\); print\\('Backend OK'\\)\")",
       "Bash(ls -lh /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/scene.mp4 2>/dev/null && echo \"---\" && ffmpeg -i /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/scene.mp4 2>&1 | head -20)",
       "Bash(ffmpeg -y -i /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/scene.mp4 -vn -acodec pcm_s16le -ar 16000 -ac 1 -f s16le /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/scene_audio.pcm 2>&1 | tail -5 && echo \"---\" && ls -lh /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/scene_audio.pcm)",
-      "Bash(uv run python -c \"\nimport inspect\nfrom elevenlabs import ElevenLabs\nclient = ElevenLabs\\(api_key='test'\\)\nstt = client.speech_to_text.realtime\nprint\\('connect type:', type\\(stt.connect\\)\\)\nprint\\('is coroutine function:', inspect.iscoroutinefunction\\(stt.connect\\)\\)\n# Check if it's a regular function that returns something\nsig = inspect.signature\\(stt.connect\\)\nprint\\('signature:', sig\\)\n\" 2>&1)"
+      "Bash(uv run python -c \"\nimport inspect\nfrom elevenlabs import ElevenLabs\nclient = ElevenLabs\\(api_key='test'\\)\nstt = client.speech_to_text.realtime\nprint\\('connect type:', type\\(stt.connect\\)\\)\nprint\\('is coroutine function:', inspect.iscoroutinefunction\\(stt.connect\\)\\)\n# Check if it's a regular function that returns something\nsig = inspect.signature\\(stt.connect\\)\nprint\\('signature:', sig\\)\n\" 2>&1)",
+      "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mp4 2>/dev/null && echo \"---\" && ffmpeg -ss 25 -i assets/scene.mp4 -frames:v 1 -f image2 -c:v mjpeg -q:v 2 pipe:1 2>/dev/null | wc -c)",
+      "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mp4 /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mov 2>/dev/null)",
+      "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.pcm 2>/dev/null)",
+      "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mp4 2>/dev/null)"
     ]
   }
 }

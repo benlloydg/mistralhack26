@@ -148,10 +148,10 @@ export function Dashboard() {
       {/* Header */}
       <header className="flex justify-between items-center h-12 shrink-0">
         <div className="flex items-center gap-4">
-          <button onClick={handleReset} className="text-xl font-bold tracking-tight uppercase flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <a href="/" className="text-xl font-bold tracking-tight uppercase flex items-center gap-2 hover:opacity-80 transition-opacity">
             <span className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]"></span>
             Dispatch
-          </button>
+          </a>
           <div className="h-4 w-[1px] dark:bg-white/20 bg-black/20 mx-2"></div>
           <div className="font-mono text-sm dark:text-white/40 text-slate-500 tracking-widest hidden md:block">
             INCIDENT INTELLIGENCE SYSTEM // v2.0.4

@@ -34,9 +34,19 @@ from ..models.incident import Severity, IncidentStatus
 
 logger = logging.getLogger(__name__)
 
-# Video asset paths
-SCENE_VIDEO = "assets/scene.mp4"
-SCENE_PCM = "assets/scene_audio.pcm"
+# Video asset directory
+ASSETS_DIR = "assets"
+SUPPORTED_VIDEO_EXTENSIONS = (".mp4", ".mov", ".mkv", ".avi")
+
+
+def detect_video() -> str | None:
+    """Find the first video file in assets/. Returns path or None."""
+    if not os.path.isdir(ASSETS_DIR):
+        return None
+    for f in sorted(os.listdir(ASSETS_DIR)):
+        if f.lower().endswith(SUPPORTED_VIDEO_EXTENSIONS):
+            return os.path.join(ASSETS_DIR, f)
+    return None
 
 # Vision timestamps (seconds into video)
 VISION_FRAME_1_S = 25.0
@@ -54,6 +64,7 @@ class DemoOrchestrator:
         self.state = state
         self.previous_frame = None
         self._approved = asyncio.Event()
+        self._feed_started = asyncio.Event()
         self._cancelled = False
         self._transcript_count = 0
         self._pipeline_tasks: list[asyncio.Task] = []
@@ -63,6 +74,10 @@ class DemoOrchestrator:
     def approve(self):
         """Called by the /demo/approve endpoint."""
         self._approved.set()
+
+    def begin_feed(self):
+        """Called by the /demo/feed endpoint when frontend starts playback."""
+        self._feed_started.set()
 
     def cancel(self):
         """Cancel the running demo."""
@@ -96,30 +111,21 @@ class DemoOrchestrator:
             severity=Severity.UNKNOWN.value,
         )
 
-        # Update demo_control → "playing"
-        self._update_demo_control("playing")
-
-        # Extract PCM audio from video (cached if already exists)
-        video_path = SCENE_VIDEO
-        pcm_path = SCENE_PCM
-        if os.path.exists(video_path):
-            self.state.log("orchestrator", "init", "Extracting audio from scene video...")
-            pcm_path = await extract_audio_pcm(video_path, pcm_path)
-            self.state.log("orchestrator", "init", "Audio extraction complete")
-        else:
-            self.state.log("orchestrator", "init",
-                           f"Video not found: {video_path}. Using fallback if available.",
-                           color="amber")
-            # Try crash_video.mp4 as fallback
-            fallback = "assets/crash_video.mp4"
-            if os.path.exists(fallback):
-                video_path = fallback
-                pcm_path = "assets/crash_audio.pcm"
-                pcm_path = await extract_audio_pcm(video_path, pcm_path)
-
-        if not os.path.exists(pcm_path):
-            self.state.log("orchestrator", "error", "No audio available. Cannot proceed.", color="red")
+        # Auto-detect video file in assets/
+        video_path = detect_video()
+        if not video_path:
+            self.state.log("orchestrator", "error",
+                           "No video found in assets/. Drop an .mp4 or .mov file there.",
+                           color="red")
             return
+
+        self.state.log("orchestrator", "init", f"Using video: {video_path}")
+
+        # Extract PCM audio (cached — re-extracts only if video is newer)
+        pcm_path = os.path.splitext(video_path)[0] + "_audio.pcm"
+        self.state.log("orchestrator", "init", "Extracting audio from video...")
+        pcm_path = await extract_audio_pcm(video_path, pcm_path)
+        self.state.log("orchestrator", "init", "Audio extraction complete")
 
         self.state.log("orchestrator", "init", "Video monitor armed", color="blue")
 
@@ -129,7 +135,16 @@ class DemoOrchestrator:
             on_committed=self._on_committed_transcript,
         )
         await self._scribe.connect()
-        self.state.log("orchestrator", "init", "Scribe v2 Realtime connected", color="green")
+        self.state.log("orchestrator", "init", "Scribe v2 connected — waiting for feed", color="green")
+
+        # --- Wait for frontend to start playback ---
+        self._update_demo_control("listening")
+        self.state.log("orchestrator", "listening",
+                       "Listening... Press INITIATE FEED to begin",
+                       color="amber", flash=True)
+        await self._feed_started.wait()
+        self.state.log("orchestrator", "feed_started", "Feed started — streaming audio", color="green")
+        self._update_demo_control("playing")
 
         # --- Launch parallel tasks ---
         audio_task = asyncio.create_task(
@@ -442,7 +457,11 @@ class DemoOrchestrator:
                        "PRIORITY INTERRUPT — Hazard warning to all callers",
                        color="red", flash=True)
 
-        languages = self._scribe.feed_registry.languages if self._scribe else []
+        # Determine broadcast languages from detected feeds, normalizing "unknown"
+        detected_langs = self._scribe.feed_registry.languages if self._scribe else []
+        languages = list(dict.fromkeys(
+            lang if lang != "unknown" else "en" for lang in detected_langs
+        ))
         if not languages:
             languages = ["en"]
 
@@ -479,14 +498,15 @@ class DemoOrchestrator:
                 "case_id": self.deps.case_id,
                 "caller_id": "dispatch",
                 "caller_label": "DISPATCH",
-                "language": lang,
+                "language": lang or "en",
                 "original_text": warning_text,
                 "translated_text": translation,
                 "confidence": 1.0,
                 "segment_index": 900 + languages.index(lang),
-                "feed_id": f"DISPATCH",
+                "feed_id": "DISPATCH",
                 "direction": "outbound",
                 "priority": "evacuation",
+                "audio_url": audio_url,
             }).execute()
             self.state.log("voice", "warning_sent",
                            f"Evacuation warning sent ({lang.upper()})",

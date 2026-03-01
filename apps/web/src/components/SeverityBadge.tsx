@@ -24,7 +24,7 @@ export function SeverityBadge({ severity }: { severity: string }) {
       {severity?.toLowerCase() === 'critical' && (
         <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
       )}
-      {severity ? severity : 'UNKNOWN'}
+      {severity ? (severity.toLowerCase() === 'unknown' ? 'MONITORING' : severity) : 'MONITORING'}
     </div>
   );
 }

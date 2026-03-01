@@ -11,14 +11,16 @@ const TIMED_SCENES = [
   { time: 0, desc: "Nighttime intersection with light traffic", detections: [{label: 'persons', conf: 0.90}] }
 ];
 
-export function CCTVPanel({ 
-  state, 
+export function CCTVPanel({
+  state,
   isBroadcasting = false,
-  onAudioSpectrum
-}: { 
+  onAudioSpectrum,
+  videoUrl
+}: {
   state: IncidentState | null;
   isBroadcasting?: boolean;
   onAudioSpectrum?: (data: number[]) => void;
+  videoUrl?: string | null;
 }) {
   // Demo states to show some visual activity 
   const isActive = state && ['active', 'escalated', 'critical'].includes(state.status);
@@ -114,7 +116,7 @@ export function CCTVPanel({
         {/* Looping CCTV Video Feed */}
         <video 
           ref={videoRef}
-          src="/video/crash_01.mp4" 
+          src={videoUrl || "/video/crash_01.mp4"}
           loop 
           crossOrigin="anonymous"
           playsInline 
@@ -125,13 +127,16 @@ export function CCTVPanel({
         {/* Audio Initialization Overlay (Browser Policy Requirement) */}
         {!audioInitialized && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <button 
+            <button
               onClick={() => {
                 setAudioInitialized(true);
                 // Manually trigger play since we removed autoPlay to satisfy browser policies
                 if (videoRef.current) {
                   videoRef.current.play().catch(e => console.error("Playback failed:", e));
                 }
+                // Signal backend to start audio streaming + vision
+                fetch("http://localhost:8000/api/v1/demo/feed", { method: "POST" })
+                  .catch(e => console.error("Feed signal failed:", e));
               }}
               className="flex items-center gap-3 px-6 py-3 border border-blue-500/50 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-mono text-xs uppercase tracking-widest rounded-sm transition-all animate-pulse hover:animate-none"
             >

@@ -28,3 +28,8 @@ app.mount("/audio", StaticFiles(directory=GENERATED_AUDIO_DIR), name="audio")
 FRAMES_DIR = os.path.join(os.path.dirname(__file__), "..", "assets", "frames")
 os.makedirs(FRAMES_DIR, exist_ok=True)
 app.mount("/frames", StaticFiles(directory=FRAMES_DIR), name="frames")
+
+# Serve video/media assets at /assets/{filename}
+ASSETS_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")
+os.makedirs(ASSETS_DIR, exist_ok=True)
+app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")

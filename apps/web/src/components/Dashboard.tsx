@@ -21,6 +21,7 @@ export function Dashboard() {
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [audioSpectrum, setAudioSpectrum] = useState<number[]>(new Array(10).fill(0));
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   // Sync state from Supabase Realtime — subscribes once we have a case_id
   const incidentState = useIncidentState(activeCaseId ?? "");
@@ -54,6 +55,7 @@ export function Dashboard() {
       if (!response.ok) throw new Error("Failed to start DEMO");
       const data = await response.json();
       setActiveCaseId(data.case_id);
+      setVideoUrl(data.video_url);
       setShowLanding(false);
     } catch (err) {
       console.error(err);
@@ -71,6 +73,7 @@ export function Dashboard() {
         console.error(err);
       }
       setActiveCaseId(null);
+      setVideoUrl(null);
       setShowLanding(true);
       window.location.reload(); // Hard reload to clear client state
     }
@@ -187,7 +190,7 @@ export function Dashboard() {
             <span className="text-[10px] font-mono font-bold tracking-widest uppercase dark:text-white/40 text-black/40">SCENE MONITORING // CAM-04 + MIC-04</span>
           </div>
           <div className="flex-[3] min-h-0">
-            <CCTVPanel state={incidentState} isBroadcasting={isBroadcasting} onAudioSpectrum={setAudioSpectrum} />
+            <CCTVPanel state={incidentState} isBroadcasting={isBroadcasting} onAudioSpectrum={setAudioSpectrum} videoUrl={videoUrl} />
           </div>
           <div className="flex-[2] min-h-0">
             <TranscriptPanel transcripts={transcripts} spectrum={audioSpectrum} />

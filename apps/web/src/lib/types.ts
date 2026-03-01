@@ -46,6 +46,10 @@ export interface Transcript {
   confidence: number | null;
   segment_index: number;
   created_at: string;
+  feed_id?: string | null;
+  direction?: string | null;
+  priority?: string | null;
+  audio_url?: string | null;
 }
 
 export interface Dispatch {

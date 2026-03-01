@@ -1,7 +1,7 @@
 import { Dispatch, Transcript } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Check, Clock, Navigation, Volume2, Radio, Play, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export function ResponseLanes({ 
   dispatches, 
@@ -23,12 +23,7 @@ export function ResponseLanes({
   const [activeLangIndex, setActiveLangIndex] = useState(-1);
   const [hasNotifiedBackend, setHasNotifiedBackend] = useState(false);
 
-  const realOutbound = transcripts.filter(t => (t.caller_label || t.caller_id)?.toLowerCase() === 'dispatch');
-  const outboundMessages = realOutbound.length > 0 ? realOutbound : [
-    { id: 991, language: 'es', original_text: '¡Atención! Se ha detectado fuego. Aléjense del área inmediatamente.', translated_text: null, caller_label: 'dispatch' },
-    { id: 992, language: 'zh', original_text: '注意！已检测到火灾。请立即远离该区域。', translated_text: null, caller_label: 'dispatch' },
-    { id: 993, language: 'fr', original_text: 'Attention ! Un incendie a été détecté. Éloignez-vous immédiatement.', translated_text: null, caller_label: 'dispatch' },
-  ] as any[];
+  const outboundMessages = transcripts.filter(t => (t.caller_label || t.caller_id)?.toLowerCase() === 'dispatch');
   
   // Create synthetic list merging recommended and confirmed/dispatched
   const existingTypes = new Set(dispatches.map(d => d.unit_type.toLowerCase()));
@@ -57,25 +52,45 @@ export function ResponseLanes({
     }, 1500);
   };
 
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+
   const handleBroadcast = () => {
     setBroadcastState('playing');
     setActiveLangIndex(0);
   };
 
-  // Simulate sequential playing of broadcast languages
+  // Play broadcast audio sequentially — real ElevenLabs TTS
   useEffect(() => {
     if (onBroadcastStateChange) {
       onBroadcastStateChange(broadcastState === 'playing');
     }
-    
+
     if (broadcastState === 'playing' && outboundMessages.length > 0) {
       if (activeLangIndex < outboundMessages.length) {
-        const timer = setTimeout(() => {
-          setActiveLangIndex(prev => prev + 1);
-        }, 2500); // 2.5s per language line
-        return () => clearTimeout(timer);
+        const msg = outboundMessages[activeLangIndex];
+        const audioUrl = msg.audio_url;
+
+        if (audioUrl) {
+          // Play real TTS audio from ElevenLabs
+          const audio = new Audio(`http://localhost:8000${audioUrl}`);
+          audioElRef.current = audio;
+          audio.play().catch(e => console.error("Audio playback failed:", e));
+          audio.onended = () => setActiveLangIndex(prev => prev + 1);
+          // Fallback timeout in case audio fails to fire onended
+          const fallback = setTimeout(() => setActiveLangIndex(prev => prev + 1), 10000);
+          return () => {
+            clearTimeout(fallback);
+            audio.pause();
+            audio.onended = null;
+          };
+        } else {
+          // No audio_url — use timer fallback
+          const timer = setTimeout(() => setActiveLangIndex(prev => prev + 1), 2500);
+          return () => clearTimeout(timer);
+        }
       } else {
         setBroadcastState('sent');
+        audioElRef.current = null;
       }
     }
   }, [broadcastState, activeLangIndex, outboundMessages.length, onBroadcastStateChange]);

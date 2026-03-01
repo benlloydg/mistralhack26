@@ -4,7 +4,7 @@ import time
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks
-from ..services.orchestrator import DemoOrchestrator
+from ..services.orchestrator import DemoOrchestrator, detect_video
 from ..services.state import StateManager
 from ..services.tts import GENERATED_AUDIO_DIR
 from ..agents.shared_deps import TriageNetDeps
@@ -77,7 +77,20 @@ async def start_demo(background_tasks: BackgroundTasks):
     # Run orchestrator in background — returns immediately to frontend
     background_tasks.add_task(_active_orchestrator.start)
 
-    return {"case_id": case_id, "status": "started"}
+    # Detect video so frontend can play the same file
+    video_path = detect_video()
+    video_url = f"http://localhost:8000/assets/{os.path.basename(video_path)}" if video_path else None
+
+    return {"case_id": case_id, "status": "started", "video_url": video_url}
+
+
+@router.post("/feed")
+async def start_feed():
+    """Frontend signals that video playback has started. Unblocks audio streaming + vision."""
+    if _active_orchestrator:
+        _active_orchestrator.begin_feed()
+        return {"status": "feed_started", "case_id": _active_case_id}
+    return {"status": "no_active_demo"}
 
 
 @router.post("/approve")

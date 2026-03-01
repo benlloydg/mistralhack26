@@ -18,20 +18,20 @@ export function CaseFilePanel({ state }: { state: IncidentState | null }) {
         <div className="flex items-start justify-between mb-3">
           <div>
             <div className="text-[10px] font-mono uppercase tracking-widest dark:text-white/50 text-slate-500 font-semibold mb-1">
-              Triage // Case File
+              TRIAGE // CASE FILE
             </div>
             <h1 className="text-xl font-bold tracking-tight uppercase dark:text-white/90 text-black/90 leading-none mb-2">
               {state.status === 'intake' 
-                ? 'INCOMING CALL' 
+                ? 'SCENE MONITORING' 
                 : state.incident_type 
                   ? `${state.incident_type.replace(/_/g, ' ')}${state.hazard_flags.includes('engine_fire') ? ' + FIRE' : ''}` 
                   : 'UNCLASSIFIED INCIDENT'}
             </h1>
             <div className="flex items-center gap-2 dark:text-white/60 text-slate-600 font-mono text-[11px]">
               <MapPin className="w-3 h-3" />
-              <span>{state.location_normalized || state.location_raw || 'Awaiting location...'}</span>
+              <span>{state.location_normalized || state.location_raw || 'Market St & 5th St'}</span>
               <span className="opacity-50">·</span>
-              <span className="uppercase tracking-widest">Speakers: {state.caller_count}</span>
+              <span className="uppercase tracking-widest">SPEAKERS: {state.caller_count}</span>
               <span className="opacity-50">·</span>
               <span className="uppercase tracking-widest flex items-center gap-1"><Users className="w-3 h-3"/> {state.people_count_estimate || '--'}</span>
             </div>

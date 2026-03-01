@@ -83,7 +83,7 @@ export function AgentTerminal({ logs }: { logs: AgentLog[] }) {
               className={cn(
                 "flex flex-col gap-1.5 pb-3 mb-3 animate-in fade-in slide-in-from-top-2 duration-300",
                 i !== logs.length - 1 && "border-b dark:border-white/5 border-black/5",
-                log.display_flash && "animate-pulse"
+                log.display_flash && i === 0 && "animate-pulse"
               )}
             >
               <div className="flex items-center gap-2">

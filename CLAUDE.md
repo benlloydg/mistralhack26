@@ -75,6 +75,8 @@ See `.specify/memory/constitution.md` for project principles and governance.
 ## Active Technologies
 - Python 3.12 + FastAPI 0.115+, pydantic 2.10+, pydantic-settings 2.6+, pydantic-ai[mistral] 0.2+, mistralai 1.12+, supabase 2.11+, httpx 0.28+, python-dotenv 1.0+, elevenlabs 2.37+ (001-backend-foundation, 001-scribe-v2)
 - Supabase (Postgres + Realtime) — 6 tables: incident_state, agent_logs, transcripts, dispatches, live_partials, demo_control (001-scribe-v2)
+- Python 3.12, uv package manager + FastAPI, pydantic, mistralai, supabase (004-after-action-report)
+- Supabase (PostgreSQL + Realtime) — read-only for report; disk for frames (004-after-action-report)
 
 ## Recent Changes
 - 001-backend-foundation: Added Python 3.12 + FastAPI 0.115+, pydantic 2.10+, pydantic-settings 2.6+, pydantic-ai[mistral] 0.2+, mistralai 1.12+, supabase 2.11+, httpx 0.28+, python-dotenv 1.0+

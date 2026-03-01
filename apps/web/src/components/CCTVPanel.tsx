@@ -90,7 +90,7 @@ export function CCTVPanel({ state, isBroadcasting = false }: { state: IncidentSt
         {/* HUD Elements */}
         {isActive && (
           <>
-            <div className="absolute top-4 left-4 z-30">
+            <div className="absolute top-14 left-4 z-30">
               {isBroadcasting && (
                 <div className="flex bg-amber-500/90 text-black px-3 py-1.5 rounded-sm items-center gap-2 animate-[pulse_1s_ease-in-out_infinite] shadow-[0_0_20px_rgba(245,158,11,0.6)]">
                   <Volume2 className="w-4 h-4" />

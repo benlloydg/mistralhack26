@@ -8,7 +8,7 @@ export function AgentTerminal({ logs }: { logs: AgentLog[] }) {
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTo({
-        top: containerRef.current.scrollHeight,
+        top: 0,
         behavior: 'smooth'
       });
     }
@@ -68,14 +68,20 @@ export function AgentTerminal({ logs }: { logs: AgentLog[] }) {
         ref={containerRef}
         className="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-[11px] sm:text-xs leading-relaxed"
       >
+        {/* Blinking Cursor */}
+        <div className="flex items-center gap-2 mb-3 pb-3 border-b dark:border-white/5 border-black/5 opacity-60 animate-in fade-in duration-300">
+          <span className="dark:text-white/30 text-black/30 font-bold">&gt;</span>
+          <span className="w-1.5 h-3.5 dark:bg-white/50 bg-black/50 animate-pulse"></span>
+        </div>
+
         {logs.length === 0 ? (
           <div className="dark:text-white/20 text-black/30 italic">Awaiting telemetry...</div>
         ) : (
-          logs.map((log, i) => (
+          [...logs].reverse().map((log, i) => (
             <div 
               key={log.id} 
               className={cn(
-                "flex flex-col gap-1.5 pb-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
+                "flex flex-col gap-1.5 pb-3 mb-3 animate-in fade-in slide-in-from-top-2 duration-300",
                 i !== logs.length - 1 && "border-b dark:border-white/5 border-black/5",
                 log.display_flash && "animate-pulse"
               )}
@@ -99,12 +105,6 @@ export function AgentTerminal({ logs }: { logs: AgentLog[] }) {
             </div>
           ))
         )}
-        
-        {/* Blinking Cursor */}
-        <div className="flex items-center gap-2 mt-4 pt-2 opacity-60">
-          <span className="dark:text-white/30 text-black/30 font-bold">&gt;</span>
-          <span className="w-1.5 h-3.5 dark:bg-white/50 bg-black/50 animate-pulse"></span>
-        </div>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ export function TranscriptPanel({ transcripts }: { transcripts: Transcript[] }) 
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTo({
-        top: containerRef.current.scrollHeight,
+        top: 0,
         behavior: 'smooth'
       });
     }
@@ -71,10 +71,10 @@ export function TranscriptPanel({ transcripts }: { transcripts: Transcript[] }) 
         {renderItems.length === 0 ? (
           <div className="dark:text-white/20 text-black/30 italic text-sm font-sans">Waiting for audio transmission...</div>
         ) : (
-          renderItems.map((item) => {
+          [...renderItems].reverse().map((item) => {
             if (item.isDispatch) {
               return (
-                <div key={item.id} className="flex flex-col pb-3 mb-3 border-b dark:border-white/5 border-black/5 last:border-0 last:mb-0 last:pb-0 animate-in fade-in duration-300">
+                <div key={item.id} className="flex flex-col pb-3 mb-3 border-b dark:border-white/5 border-black/5 last:border-0 last:mb-0 last:pb-0 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2 text-xs">
                       <span className="dark:text-white/30 text-black/40 font-mono">[{new Date(item.created_at).toISOString().substring(11, 19)}]</span>
@@ -100,7 +100,7 @@ export function TranscriptPanel({ transcripts }: { transcripts: Transcript[] }) 
             } else {
               const t = item as Transcript;
               return (
-                <div key={t.id} className="flex flex-col pb-3 mb-3 border-b dark:border-white/5 border-black/5 last:border-0 last:mb-0 last:pb-0 animate-in fade-in duration-300">
+                <div key={t.id} className="flex flex-col pb-3 mb-3 border-b dark:border-white/5 border-black/5 last:border-0 last:mb-0 last:pb-0 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2 text-xs">
                       <span className="dark:text-white/30 text-black/40 font-mono">[{new Date(t.created_at).toISOString().substring(11, 19)}]</span>

@@ -98,31 +98,29 @@ export function TranscriptPanel({ transcripts, spectrum }: { transcripts: Transc
               const t = item as Transcript;
               return (
                 <div key={t.id} className="flex flex-col pb-3 mb-3 border-b dark:border-white/5 border-black/5 last:border-0 last:mb-0 last:pb-0 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="dark:text-white/30 text-black/40 font-mono">[{new Date(t.created_at).toISOString().substring(11, 19)}]</span>
+                  <div className="flex items-start justify-between mb-1.5">
+                    <div className="flex items-start gap-2 text-xs flex-1">
+                      <span className="dark:text-white/30 text-black/40 font-mono mt-[2px] shrink-0">[{new Date(t.created_at).toISOString().substring(11, 19)}]</span>
+                      <div className="dark:text-white/70 text-black/70 text-sm font-sans leading-tight">
+                        "{t.original_text}"
+                      </div>
                     </div>
                     {t.translated_text && t.language !== 'en' ? (
-                      <span className="text-[9px] font-mono tracking-widest uppercase bg-blue-500/10 dark:bg-blue-400/10 px-1.5 py-0.5 rounded text-blue-600 dark:text-blue-400 font-bold">
+                      <span className="text-[9px] font-mono tracking-widest uppercase bg-blue-500/10 dark:bg-blue-400/10 px-1.5 py-0.5 rounded text-blue-600 dark:text-blue-400 font-bold shrink-0 ml-3 mt-[1px]">
                         {t.language.toUpperCase()} → EN
                       </span>
                     ) : (
-                      <span className="text-[9px] font-mono tracking-widest uppercase bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400 font-bold">
+                      <span className="text-[9px] font-mono tracking-widest uppercase bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400 font-bold shrink-0 ml-3 mt-[1px]">
                         {t.language.toUpperCase()}
                       </span>
                     )}
                   </div>
                   
-                  <div className="flex flex-col gap-1">
-                    {t.language !== 'en' && t.translated_text ? (
-                      <>
-                        <div className="dark:text-white/50 text-black/50 text-[11px] leading-relaxed font-sans">"{t.original_text}"</div>
-                        <div className="dark:text-white/90 text-black/90 font-sans text-sm font-medium">{t.translated_text}</div>
-                      </>
-                    ) : (
-                      <div className="dark:text-white/90 text-black/90 font-sans text-sm font-medium">{t.original_text}</div>
-                    )}
-                  </div>
+                  {t.translated_text && t.language !== 'en' && (
+                    <div className="dark:text-white/90 text-black/90 font-sans text-[15px] font-semibold tracking-tight mt-1">
+                      {t.translated_text}
+                    </div>
+                  )}
                 </div>
               );
             }

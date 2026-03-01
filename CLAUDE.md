@@ -46,5 +46,32 @@ Optional quality gates (use when appropriate):
 - Agents write to Supabase
 - Frontend reacts via Supabase Realtime
 
+## Git Workflow (Hackathon Mode)
+- Work directly on `main` — no feature branches
+- Commit after each feature passes tests
+- Spec-kit is used for planning only (spec.md, plan.md, tasks.md) — skip branch creation
+- One commit per feature: `feat(NNN): description`
+
+## Execution Speed
+- Always use sub-agents to speed things up when applicable
+- Parallelize independent file creation and independent tasks
+
+## Testing Requirements
+- Every feature MUST have E2E tests with timestamps/timing for each step
+- Tests print elapsed time per operation (e.g., `[00:02.3s] Supabase write completed`)
+- Tests print total elapsed time summary at the end
+- Every feature MUST include user testing instructions (step-by-step manual verification guide)
+
+## Pydantic-AI Reference
+- All pydantic-ai agents MUST follow `docs/MASTER/PYDANTIC_AI_DOCS.md` — this is the authoritative API reference
+- Use `result.output` (NOT `result.data`), `@agent.tool` with `RunContext`, and `Agent(model, deps_type=..., output_type=...)`
+
 ## Constitution
 See `.specify/memory/constitution.md` for project principles and governance.
+
+## Active Technologies
+- Python 3.12 + FastAPI 0.115+, pydantic 2.10+, pydantic-settings 2.6+, pydantic-ai[mistral] 0.2+, mistralai 1.12+, supabase 2.11+, httpx 0.28+, python-dotenv 1.0+ (001-backend-foundation)
+- Supabase (Postgres + Realtime) — 4 tables: incident_state, agent_logs, transcripts, dispatches (001-backend-foundation)
+
+## Recent Changes
+- 001-backend-foundation: Added Python 3.12 + FastAPI 0.115+, pydantic 2.10+, pydantic-settings 2.6+, pydantic-ai[mistral] 0.2+, mistralai 1.12+, supabase 2.11+, httpx 0.28+, python-dotenv 1.0+

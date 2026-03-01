@@ -46,7 +46,7 @@ export function AgentTerminal({ logs }: { logs: AgentLog[] }) {
       case 'prioritybroadcast':
         return '11labs-scribe';
       default: 
-        return 'triage-core';
+        return 'core';
     }
   };
 

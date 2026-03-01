@@ -111,14 +111,77 @@ export function ResponseLanes({
         <div className="text-[10px] font-mono dark:text-white/30 text-slate-400">{allLanes.length} ACTIONS</div>
       </div>
 
+      {/* Evacuation Broadcast Card — pinned at top */}
+      {outboundMessages.length > 0 && (
+        <div className="p-3 mx-4 mt-4 rounded-sm border transition-all animate-in fade-in zoom-in-95 duration-500 border-amber-500/50 bg-amber-500/10 shrink-0">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-amber-500 font-bold">⚠️</span>
+            <span className="font-mono text-[11px] font-bold tracking-widest uppercase text-amber-500">Evacuation Broadcast</span>
+          </div>
+
+          <div className="space-y-2 font-mono text-xs mb-4">
+            {outboundMessages.map((msg, index) => {
+              const isPlaying = broadcastState === 'playing' && index === activeLangIndex;
+              const isDone = broadcastState === 'sent' || (broadcastState === 'playing' && index < activeLangIndex);
+
+              return (
+                <div key={msg.id} className={cn("flex items-center justify-between group", isPlaying ? "text-amber-500" : isDone ? "text-emerald-500" : "dark:text-white/60 text-black/60")}>
+                  <div className="flex items-center gap-2 truncate pr-4">
+                    <span className="uppercase font-bold shrink-0">{msg.language}</span>
+                    <span className="truncate opacity-80">"{msg.original_text}"</span>
+                  </div>
+                  <div className="shrink-0 flex items-center text-[10px] font-bold tracking-widest gap-1.5">
+                    {isDone ? (
+                      <>✓ SENT</>
+                    ) : isPlaying ? (
+                      <span className="flex items-center gap-1.5 text-amber-500 font-bold">
+                        <div className="flex items-center gap-[2px] h-3 mr-1">
+                           <div className="w-1 h-full bg-amber-500 animate-[pulse_0.8s_ease-in-out_infinite]"></div>
+                           <div className="w-1 h-1/2 bg-amber-500 animate-[pulse_1.2s_ease-in-out_infinite_0.2s]"></div>
+                           <div className="w-1 h-3/4 bg-amber-500 animate-[pulse_1.0s_ease-in-out_infinite_0.4s]"></div>
+                        </div>
+                        PLAYING
+                      </span>
+                    ) : (
+                      <span className="opacity-50 flex items-center gap-1"><Play className="w-3 h-3" fill="currentColor" /> READY</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pt-3 border-t border-amber-500/30 flex justify-between items-center">
+             <span className="text-[10px] font-mono text-amber-600 dark:text-amber-500/60 uppercase">elevenlabs-tts</span>
+             {broadcastState === 'sent' ? (
+               <div className="flex items-center gap-1.5 text-[10px] uppercase font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                  <Check className="w-3.5 h-3.5" /> Done
+               </div>
+             ) : (
+               <button
+                 onClick={handleBroadcast}
+                 disabled={broadcastState !== 'ready'}
+                 className="text-[10px] uppercase font-mono font-bold tracking-widest bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 rounded-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all flex items-center gap-1.5 min-w-[120px] justify-center"
+               >
+                 {broadcastState === 'playing' ? (
+                   <><Loader2 className="w-3 h-3 animate-spin"/> Broadcasting</>
+                 ) : (
+                   <span className="animate-[pulse_2s_ease-in-out_infinite] inline-block flex items-center gap-1.5"><Volume2 className="w-3 h-3" /> [BROADCAST]</span>
+                 )}
+               </button>
+             )}
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4 space-y-3">
-        {allLanes.length === 0 ? (
+        {allLanes.length === 0 && outboundMessages.length === 0 ? (
           <div className="dark:text-white/20 text-black/30 italic font-mono text-xs text-center mt-10">Awaiting tactical recommendations...</div>
         ) : (
           allLanes.map((d) => {
             const localState = executingUnits[d.unit_type];
             const isConfirmed = d.status === 'confirmed' || d.status === 'dispatched' || localState === 'done';
-            
+
             return (
               <div key={d.id} className={cn("p-3 rounded-sm border transition-all animate-in fade-in zoom-in-95 duration-300", getStatusColor(d.status, localState))}>
                 <div className="flex justify-between items-center mb-2">
@@ -126,7 +189,7 @@ export function ResponseLanes({
                     <span className="font-mono text-xs font-bold uppercase tracking-widest">{d.unit_type}</span>
                     {d.status === 'dispatched' && <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>}
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className="text-[10px] font-mono uppercase dark:text-white/60 text-black/60 font-semibold">
                       {isConfirmed ? 'CONFIRMED' : 'RECOMMENDED'}
@@ -137,7 +200,7 @@ export function ResponseLanes({
                         Done
                       </div>
                     ) : (
-                      <button 
+                      <button
                         onClick={() => handleExecute(d.unit_type)}
                         disabled={localState === 'executing'}
                         className="text-[10px] uppercase font-mono font-bold tracking-widest bg-emerald-500 hover:bg-emerald-400 text-white dark:text-zinc-950 px-2.5 py-1 rounded-sm shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all flex items-center gap-1.5 min-w-[70px] justify-center"
@@ -179,69 +242,6 @@ export function ResponseLanes({
               </div>
             );
           })
-        )}
-
-        {/* Evacuation Broadcast Card */}
-        {outboundMessages.length > 0 && (
-          <div className="p-3 rounded-sm border transition-all animate-in fade-in zoom-in-95 duration-500 border-amber-500/50 bg-amber-500/10">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-amber-500 font-bold">⚠️</span>
-              <span className="font-mono text-[11px] font-bold tracking-widest uppercase text-amber-500">Evacuation Broadcast</span>
-            </div>
-            
-            <div className="space-y-2 font-mono text-xs mb-4">
-              {outboundMessages.map((msg, index) => {
-                const isPlaying = broadcastState === 'playing' && index === activeLangIndex;
-                const isDone = broadcastState === 'sent' || (broadcastState === 'playing' && index < activeLangIndex);
-                
-                return (
-                  <div key={msg.id} className={cn("flex items-center justify-between group", isPlaying ? "text-amber-500" : isDone ? "text-emerald-500" : "dark:text-white/60 text-black/60")}>
-                    <div className="flex items-center gap-2 truncate pr-4">
-                      <span className="uppercase font-bold shrink-0">{msg.language}</span>
-                      <span className="truncate opacity-80">"{msg.original_text}"</span>
-                    </div>
-                    <div className="shrink-0 flex items-center text-[10px] font-bold tracking-widest gap-1.5">
-                      {isDone ? (
-                        <>✓ SENT</>
-                      ) : isPlaying ? (
-                        <span className="flex items-center gap-1.5 text-amber-500 font-bold">
-                          <div className="flex items-center gap-[2px] h-3 mr-1">
-                             <div className="w-1 h-full bg-amber-500 animate-[pulse_0.8s_ease-in-out_infinite]"></div>
-                             <div className="w-1 h-1/2 bg-amber-500 animate-[pulse_1.2s_ease-in-out_infinite_0.2s]"></div>
-                             <div className="w-1 h-3/4 bg-amber-500 animate-[pulse_1.0s_ease-in-out_infinite_0.4s]"></div>
-                          </div>
-                          PLAYING
-                        </span>
-                      ) : (
-                        <span className="opacity-50 flex items-center gap-1"><Play className="w-3 h-3" fill="currentColor" /> READY</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            <div className="pt-3 border-t border-amber-500/30 flex justify-between items-center">
-               <span className="text-[10px] font-mono text-amber-600 dark:text-amber-500/60 uppercase">elevenlabs-tts</span>
-               {broadcastState === 'sent' ? (
-                 <div className="flex items-center gap-1.5 text-[10px] uppercase font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                    <Check className="w-3.5 h-3.5" /> Done
-                 </div>
-               ) : (
-                 <button
-                   onClick={handleBroadcast}
-                   disabled={broadcastState !== 'ready'}
-                   className="text-[10px] uppercase font-mono font-bold tracking-widest bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 rounded-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all flex items-center gap-1.5 min-w-[120px] justify-center"
-                 >
-                   {broadcastState === 'playing' ? (
-                     <><Loader2 className="w-3 h-3 animate-spin"/> Broadcasting</>
-                   ) : (
-                     <span className="animate-[pulse_2s_ease-in-out_infinite] inline-block flex items-center gap-1.5"><Volume2 className="w-3 h-3" /> [BROADCAST]</span>
-                   )}
-                 </button>
-               )}
-            </div>
-          </div>
         )}
       </div>
 

@@ -310,10 +310,7 @@ class DemoOrchestrator:
                     deps=self.deps,
                 )
                 fusion = fusion_result.output
-                if fusion.corroborations:
-                    self.state.log("triage", "corroboration",
-                                   f"CORROBORATED: {fusion.corroborations[0].claim}",
-                                   color="green", flash=True)
+                self._log_fusion_result(fusion, segment_index)
                 if fusion.evacuation_warning_required and not self._evacuation_sent:
                     await self._send_evacuation_warnings()
 
@@ -406,7 +403,7 @@ class DemoOrchestrator:
                         else state.status),
             )
 
-            # Evidence fusion with vision
+            # Evidence fusion with vision — cross-modal corroboration
             if self._transcript_count >= 1:
                 fusion_result = await evidence_fusion_agent.run(
                     "Vision evidence updated. Fire/smoke detected by CCTV. "
@@ -414,10 +411,7 @@ class DemoOrchestrator:
                     deps=self.deps,
                 )
                 fusion = fusion_result.output
-                if fusion.corroborations:
-                    self.state.log("triage", "corroboration",
-                                   "CORROBORATED: Vision + Caller evidence match",
-                                   color="green", flash=True)
+                self._log_fusion_result(fusion, vision_frame=2)
                 if fusion.evacuation_warning_required and not self._evacuation_sent:
                     await self._send_evacuation_warnings()
 
@@ -589,6 +583,95 @@ class DemoOrchestrator:
             status=IncidentStatus.RESOLVED_DEMO.value,
             operator_summary=summary,
         )
+
+    # ----------------------------------------------------------------
+    # Fusion logging — the technical thesis
+    # ----------------------------------------------------------------
+
+    def _log_fusion_result(
+        self,
+        fusion,
+        segment_index: int | None = None,
+        vision_frame: int | None = None,
+    ):
+        """
+        Produce rich, thesis-quality log entries for evidence fusion.
+        This is the showcase: cross-modal corroboration with autonomous action.
+        """
+        from ..models.triage import EvidenceFusionResult
+
+        if not fusion.corroborations:
+            return
+
+        for corr in fusion.corroborations:
+            # Classify modalities involved
+            source_types = set()
+            source_lines = []
+            for src in corr.sources:
+                src_type = src.get("type", "unknown")
+                conf = src.get("confidence", 0.0)
+                if "vision" in src_type.lower() or "cctv" in src_type.lower():
+                    source_types.add("vision")
+                    # Include frame timestamp if available
+                    frame_t = f"T+{VISION_FRAME_2_S:.0f}s" if vision_frame else ""
+                    source_lines.append(
+                        f"Vision: {corr.claim.upper()} ({conf:.2f})"
+                        + (f" at frame {frame_t}" if frame_t else "")
+                    )
+                else:
+                    source_types.add("audio")
+                    lang = src.get("language", src_type)
+                    source_lines.append(
+                        f"Audio: {lang.upper()} speaker reported {corr.claim.lower()} ({conf:.2f})"
+                    )
+
+            is_cross_modal = len(source_types) >= 2
+            n_modalities = len(source_types)
+            event_type = "CROSS_MODAL_CORROBORATION" if is_cross_modal else "CORROBORATION"
+
+            # Build the rich message
+            lines = [
+                f"{corr.claim.upper()} confirmed by {n_modalities} independent "
+                f"{'modalities' if is_cross_modal else 'sources'}:",
+            ]
+            for sl in source_lines:
+                lines.append(f"  → {sl}")
+
+            # Note autonomous action if evacuation triggered
+            if fusion.evacuation_warning_required:
+                lines.append("Autonomous evacuation protocol triggered.")
+
+            message = "\n".join(lines)
+
+            # Structured data for frontend rendering
+            data = {
+                "claim": corr.claim,
+                "sources": corr.sources,
+                "combined_confidence": corr.combined_confidence,
+                "cross_modal": is_cross_modal,
+                "modalities": list(source_types),
+                "severity_delta": fusion.severity_delta,
+                "evacuation_triggered": fusion.evacuation_warning_required,
+            }
+
+            self.state.log(
+                "evidence_fusion",
+                event_type,
+                message,
+                data=data,
+                color="green" if not fusion.evacuation_warning_required else "red",
+                flash=True,
+            )
+
+        # Log the fusion reasoning
+        if fusion.reasoning:
+            self.state.log(
+                "evidence_fusion",
+                "reasoning",
+                fusion.reasoning,
+                data={"severity_delta": fusion.severity_delta},
+                color="purple",
+            )
 
     # ----------------------------------------------------------------
     # Helpers

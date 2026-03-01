@@ -101,7 +101,7 @@ export function TranscriptPanel({ transcripts, spectrum }: { transcripts: Transc
                   <div className="flex items-start justify-between mb-1.5">
                     <div className="flex items-start gap-2 text-xs flex-1">
                       <span className="dark:text-white/30 text-black/40 font-mono mt-[2px] shrink-0">[{new Date(t.created_at).toISOString().substring(11, 19)}]</span>
-                      <div className="dark:text-white/70 text-black/70 text-sm font-sans leading-tight">
+                      <div className="dark:text-white/70 text-black/70 text-[15px] font-semibold tracking-tight">
                         "{t.original_text}"
                       </div>
                     </div>
@@ -117,7 +117,7 @@ export function TranscriptPanel({ transcripts, spectrum }: { transcripts: Transc
                   </div>
                   
                   {t.translated_text && t.language !== 'en' && (
-                    <div className="dark:text-white/90 text-black/90 font-sans text-[15px] font-semibold tracking-tight mt-1">
+                    <div className="dark:text-white/90 text-black/90 font-sans text-sm leading-tight mt-1">
                       {t.translated_text}
                     </div>
                   )}

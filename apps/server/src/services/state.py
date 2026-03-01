@@ -41,7 +41,8 @@ class StateManager:
         self.sb.table("agent_logs").insert(entry.model_dump()).execute()
 
     def log(self, agent: str, event_type: str, message: str,
-            data: dict = None, color: str = "blue", flash: bool = False):
+            data: dict = None, color: str = "blue", flash: bool = False,
+            model: str | None = None):
         """Convenience: log + timeline in one call."""
         self.log_agent(AgentLogEntry(
             case_id=self.case_id,
@@ -51,5 +52,6 @@ class StateManager:
             data=data or {},
             display_color=color,
             display_flash=flash,
+            model=model,
         ))
         self.append_timeline(agent, message)

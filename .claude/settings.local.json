@@ -130,7 +130,9 @@
       "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mp4 /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mov 2>/dev/null)",
       "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.pcm 2>/dev/null)",
       "Bash(ls -la /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/assets/*.mp4 2>/dev/null)",
-      "Bash(uv run python -c \"\nfrom elevenlabs import CommitStrategy\nprint\\('CommitStrategy members:'\\)\nfor name in dir\\(CommitStrategy\\):\n    if not name.startswith\\('_'\\):\n        print\\(f'  {name} = {getattr\\(CommitStrategy, name\\)}'\\)\n\")"
+      "Bash(uv run python -c \"\nfrom elevenlabs import CommitStrategy\nprint\\('CommitStrategy members:'\\)\nfor name in dir\\(CommitStrategy\\):\n    if not name.startswith\\('_'\\):\n        print\\(f'  {name} = {getattr\\(CommitStrategy, name\\)}'\\)\n\")",
+      "Bash(uv run python -c \"\nimport inspect\nfrom elevenlabs.realtime.scribe import RealtimeAudioOptions\nsig = inspect.signature\\(RealtimeAudioOptions\\)\nfor name, param in sig.parameters.items\\(\\):\n    print\\(f'{name}: {param.default if param.default != inspect.Parameter.empty else \\\\\"REQUIRED\\\\\"}'\\)\" 2>&1)",
+      "Bash(uv run python -c \"\nfrom elevenlabs.realtime.scribe import RealtimeAudioOptions\n# It's a TypedDict, check annotations\nprint\\(RealtimeAudioOptions.__annotations__ if hasattr\\(RealtimeAudioOptions, '__annotations__'\\) else 'no annotations'\\)\nprint\\(dir\\(RealtimeAudioOptions\\)\\)\n\" 2>&1 | head -20)"
     ]
   }
 }

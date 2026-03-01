@@ -23,3 +23,8 @@ app.include_router(report.router)
 # Serve generated TTS audio files at /audio/{filename}
 os.makedirs(GENERATED_AUDIO_DIR, exist_ok=True)
 app.mount("/audio", StaticFiles(directory=GENERATED_AUDIO_DIR), name="audio")
+
+# Serve saved vision frames at /frames/{filename}
+FRAMES_DIR = os.path.join(os.path.dirname(__file__), "..", "assets", "frames")
+os.makedirs(FRAMES_DIR, exist_ok=True)
+app.mount("/frames", StaticFiles(directory=FRAMES_DIR), name="frames")

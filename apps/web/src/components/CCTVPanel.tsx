@@ -1,6 +1,6 @@
 import { IncidentState } from "@/lib/types";
 import { Volume2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const TIMED_SCENES = [
   { time: 13, desc: "Severe collision, active engine fire", detections: [{label: 'collision', conf: 0.99}, {label: 'fire', conf: 0.95}, {label: 'smoke', conf: 0.90}] },
@@ -11,10 +11,96 @@ const TIMED_SCENES = [
   { time: 0, desc: "Nighttime intersection with light traffic", detections: [{label: 'persons', conf: 0.90}] }
 ];
 
-export function CCTVPanel({ state, isBroadcasting = false }: { state: IncidentState | null, isBroadcasting?: boolean }) {
+export function CCTVPanel({ 
+  state, 
+  isBroadcasting = false,
+  onAudioSpectrum
+}: { 
+  state: IncidentState | null;
+  isBroadcasting?: boolean;
+  onAudioSpectrum?: (data: number[]) => void;
+}) {
   // Demo states to show some visual activity 
   const isActive = state && ['active', 'escalated', 'critical'].includes(state.status);
   const [videoTime, setVideoTime] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+
+  // Initialize Audio Analyser when video becomes active
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isActive || !onAudioSpectrum) return;
+
+    // Handle play event to initialize audio context (must be after user interaction typically, 
+    // but autoplay muted can sometimes bypass, we'll try to hook it on play)
+    const handlePlay = () => {
+       if (!audioContextRef.current) {
+         try {
+           const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+           const ctx = new AudioContext();
+           const analyser = ctx.createAnalyser();
+           
+           // Fast Fourier Transform size (higher = more resolution, we only need 10 bars so 64 is plenty)
+           analyser.fftSize = 64; 
+           analyser.smoothingTimeConstant = 0.8; // Smooth out the jumps
+
+           const source = ctx.createMediaElementSource(video);
+           source.connect(analyser);
+           
+           // We connect source->analyser, but intentionally DO NOT connect analyser->ctx.destination
+           // This keeps the HTML video muted visually/audibly while still reading the data!
+           // If we connected to destination, we'd hear it.
+
+           audioContextRef.current = ctx;
+           analyserRef.current = analyser;
+         } catch (e) {
+           console.error("AudioContext initialization failed:", e);
+         }
+       }
+
+       // Start Analysis Loop
+       const updateSpectrum = () => {
+         if (analyserRef.current && onAudioSpectrum) {
+           const bufferLength = analyserRef.current.frequencyBinCount;
+           const dataArray = new Uint8Array(bufferLength);
+           analyserRef.current.getByteFrequencyData(dataArray);
+
+           // dataArray length is 32 (fftSize/2). We only want 10 bars for the UI.
+           // We'll sample 10 points evenly.
+           const numBars = 10;
+           const step = Math.floor(dataArray.length / numBars);
+           const barData: number[] = [];
+           
+           for (let i = 0; i < numBars; i++) {
+             // Map 0-255 strictly to a 0.0 - 1.0 percentage scale
+             const p = dataArray[i * step] / 255.0;
+             barData.push(p);
+           }
+           
+           onAudioSpectrum(barData);
+         }
+         animationFrameRef.current = requestAnimationFrame(updateSpectrum);
+       };
+
+       updateSpectrum();
+    };
+
+    video.addEventListener('play', handlePlay);
+    
+    // If it's already playing when the effect runs, trigger manually
+    if (!video.paused) {
+      handlePlay();
+    }
+
+    return () => {
+      video.removeEventListener('play', handlePlay);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isActive, onAudioSpectrum]);
 
   const currentScene = TIMED_SCENES.find(s => videoTime >= s.time) || TIMED_SCENES[TIMED_SCENES.length - 1];
 
@@ -34,6 +120,7 @@ export function CCTVPanel({ state, isBroadcasting = false }: { state: IncidentSt
       <div className="flex-1 relative dark:bg-[#0a0a0a] bg-zinc-200 flex items-center justify-center overflow-hidden rounded-b-sm">
         {/* Looping CCTV Video Feed */}
         <video 
+          ref={videoRef}
           src="/video/crash_01.mp4" 
           autoPlay 
           loop 

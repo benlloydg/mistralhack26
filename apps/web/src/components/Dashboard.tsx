@@ -21,6 +21,7 @@ export function Dashboard() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showLanding, setShowLanding] = useState(true);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [audioSpectrum, setAudioSpectrum] = useState<number[]>(new Array(10).fill(0));
 
   // Sync state from Supabase Realtime
   const incidentState = useIncidentState(DEMO_CASE_ID);
@@ -184,10 +185,10 @@ export function Dashboard() {
             <span className="text-[10px] font-mono font-bold tracking-widest uppercase dark:text-white/40 text-black/40">SCENE MONITORING // CAM-04 + MIC-04</span>
           </div>
           <div className="flex-[3] min-h-0">
-            <CCTVPanel state={incidentState} isBroadcasting={isBroadcasting} />
+            <CCTVPanel state={incidentState} isBroadcasting={isBroadcasting} onAudioSpectrum={setAudioSpectrum} />
           </div>
           <div className="flex-[2] min-h-0">
-            <TranscriptPanel transcripts={transcripts} />
+            <TranscriptPanel transcripts={transcripts} spectrum={audioSpectrum} />
           </div>
         </div>
 

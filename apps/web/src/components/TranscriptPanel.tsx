@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { Volume2, AlertTriangle } from "lucide-react";
 
-export function TranscriptPanel({ transcripts }: { transcripts: Transcript[] }) {
+export function TranscriptPanel({ transcripts, spectrum }: { transcripts: Transcript[], spectrum?: number[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,17 +45,14 @@ export function TranscriptPanel({ transcripts }: { transcripts: Transcript[] }) 
       <div className="border-b dark:border-white/10 border-black/10 p-3 px-4 flex justify-between items-center dark:bg-black/40 bg-zinc-100">
         <h2 className="text-xs font-mono uppercase tracking-widest dark:text-white/50 text-slate-500 font-semibold">Scene Audio</h2>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-[2px] h-3 mr-2">
-             <div className="w-[2px] h-full bg-blue-500/50 animate-[pulse_1s_ease-in-out_infinite]"></div>
-             <div className="w-[2px] h-2/3 bg-blue-500/50 animate-[pulse_1.2s_ease-in-out_infinite_0.2s]"></div>
-             <div className="w-[2px] h-1/2 bg-blue-500/50 animate-[pulse_0.8s_ease-in-out_infinite_0.4s]"></div>
-             <div className="w-[2px] h-full bg-blue-500/50 animate-[pulse_1.5s_ease-in-out_infinite_0.1s]"></div>
-             <div className="w-[2px] h-3/4 bg-blue-500/50 animate-[pulse_1.1s_ease-in-out_infinite_0.3s]"></div>
-             <div className="w-[2px] h-full bg-blue-500/50 animate-[pulse_0.9s_ease-in-out_infinite_0.2s]"></div>
-             <div className="w-[2px] h-2/3 bg-blue-500/50 animate-[pulse_1.3s_ease-in-out_infinite_0.1s]"></div>
-             <div className="w-[2px] h-1/2 bg-blue-500/50 animate-[pulse_1.4s_ease-in-out_infinite_0.3s]"></div>
-             <div className="w-[2px] h-3/4 bg-blue-500/50 animate-[pulse_1.0s_ease-in-out_infinite_0.5s]"></div>
-             <div className="w-[2px] h-full bg-blue-500/50 animate-[pulse_1.2s_ease-in-out_infinite]"></div>
+          <div className="flex items-center gap-[2px] h-3 mr-2 items-center h-[12px]">
+            {(spectrum || new Array(10).fill(0.1)).map((val, i) => (
+              <div 
+                key={i} 
+                className="w-[2px] bg-blue-500/80 transition-all duration-75"
+                style={{ height: `${Math.max(15, val * 100)}%` }}
+              ></div>
+            ))}
           </div>
           <div className="text-xs font-mono font-bold text-red-500 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-[pulse_2s_ease-in-out_infinite]"></span>

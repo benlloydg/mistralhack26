@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 // Report JSON Type definitions based on contract
-interface ReportData {
+export interface ReportData {
   case_id: string;
   generated_at: string;
   warning: string | null;
@@ -110,7 +110,13 @@ interface ReportData {
 
 export const revalidate = 0;
 
+import { demoReportData } from './demo-data';
+
 async function fetchReport(caseId: string): Promise<ReportData | null> {
+  if (caseId === 'demo') {
+    return demoReportData;
+  }
+
   try {
     const res = await fetch(`http://localhost:8000/api/v1/cases/${caseId}/report`, {
       method: 'POST',

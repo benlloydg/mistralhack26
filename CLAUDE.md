@@ -61,6 +61,9 @@ Optional quality gates (use when appropriate):
 - Tests print elapsed time per operation (e.g., `[00:02.3s] Supabase write completed`)
 - Tests print total elapsed time summary at the end
 - Every feature MUST include user testing instructions (step-by-step manual verification guide)
+- After each feature is implemented, run all its tests and save logs to `apps/server/test-results/`
+- Log naming: `YYYYMMDD_HHMMSS_<phase>_<name>.log` (e.g., `20260228_181041_phase5_agents.log`)
+- Test results are committed with the feature for grounding/traceability
 
 ## Pydantic-AI Reference
 - All pydantic-ai agents MUST follow `docs/MASTER/PYDANTIC_AI_DOCS.md` — this is the authoritative API reference

@@ -31,7 +31,7 @@ export function CCTVPanel({
   // Initialize Audio Analyser when video becomes active
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !isActive || !onAudioSpectrum) return;
+    if (!video || !onAudioSpectrum) return;
 
     // Handle play event to initialize audio context (must be after user interaction typically, 
     // but autoplay muted can sometimes bypass, we'll try to hook it on play)
@@ -48,10 +48,7 @@ export function CCTVPanel({
 
            const source = ctx.createMediaElementSource(video);
            source.connect(analyser);
-           
-           // We connect source->analyser, but intentionally DO NOT connect analyser->ctx.destination
-           // This keeps the HTML video muted visually/audibly while still reading the data!
-           // If we connected to destination, we'd hear it.
+           analyser.connect(ctx.destination); // Ensure audio plays through speakers
 
            audioContextRef.current = ctx;
            analyserRef.current = analyser;
@@ -124,7 +121,7 @@ export function CCTVPanel({
           src="/video/crash_01.mp4" 
           autoPlay 
           loop 
-          muted 
+          crossOrigin="anonymous"
           playsInline 
           onTimeUpdate={(e) => setVideoTime(e.currentTarget.currentTime)}
           className="absolute inset-0 w-full h-full object-cover opacity-60 dark:opacity-40 pointer-events-none" 

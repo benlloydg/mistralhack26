@@ -37,21 +37,6 @@ export function CaseFilePanel({ state }: { state: IncidentState | null }) {
           <SeverityBadge severity={state.severity} />
         </div>
 
-        {/* Metrics Grid */}
-        <div className="flex items-center gap-6 border-y dark:border-white/10 border-black/10 py-3 dark:bg-white/5 bg-black/5 px-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase font-mono dark:text-white/40 text-black/50">Speakers:</span>
-            <span className="text-sm font-mono font-bold">{state.caller_count}</span>
-          </div>
-          <div className="w-px h-4 dark:bg-white/20 bg-black/20"></div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase font-mono dark:text-white/40 text-black/50 flex items-center gap-1.5">
-              <Users className="w-3 h-3" /> People Est:
-            </span>
-            <span className="text-sm font-mono font-bold">{state.people_count_estimate || '--'}</span>
-          </div>
-        </div>
-
         {/* Flags Section */}
         <div className="space-y-4">
           {state.hazard_flags.length > 0 && (

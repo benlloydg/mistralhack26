@@ -51,6 +51,21 @@ def _extract_frame_sync(video_path: str, timestamp_s: float) -> bytes:
     return result.stdout
 
 
+async def get_video_duration(video_path: str) -> float:
+    """Get video duration in seconds using ffprobe."""
+    try:
+        result = await asyncio.to_thread(
+            lambda: subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                 "-of", "default=noprint_wrappers=1:nokey=1", video_path],
+                capture_output=True, timeout=5,
+            )
+        )
+        return float(result.stdout.decode().strip())
+    except Exception:
+        return 60.0  # Default to 60s if probe fails
+
+
 async def extract_audio_pcm(video_path: str, output_path: str) -> str:
     """
     Extract mono 16-bit PCM audio at 16 kHz from a video file.

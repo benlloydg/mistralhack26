@@ -11,6 +11,7 @@ import { useIncidentState } from "@/hooks/useIncidentState";
 import { useAgentLogs } from "@/hooks/useAgentLogs";
 import { useTranscripts } from "@/hooks/useTranscripts";
 import { useDispatches } from "@/hooks/useDispatches";
+import { useLivePartials } from "@/hooks/useLivePartials";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function Dashboard() {
@@ -28,6 +29,7 @@ export function Dashboard() {
   const agentLogs = useAgentLogs(activeCaseId ?? "");
   const transcripts = useTranscripts(activeCaseId ?? "");
   const dispatches = useDispatches(activeCaseId ?? "");
+  const livePartial = useLivePartials(activeCaseId ?? "");
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -193,7 +195,7 @@ export function Dashboard() {
             <CCTVPanel state={incidentState} isBroadcasting={isBroadcasting} onAudioSpectrum={setAudioSpectrum} videoUrl={videoUrl} />
           </div>
           <div className="flex-[2] min-h-0">
-            <TranscriptPanel transcripts={transcripts} spectrum={audioSpectrum} />
+            <TranscriptPanel transcripts={transcripts} spectrum={audioSpectrum} livePartial={livePartial} />
           </div>
         </div>
 

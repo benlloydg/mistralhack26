@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { Volume2, AlertTriangle } from "lucide-react";
 
-export function TranscriptPanel({ transcripts, spectrum }: { transcripts: Transcript[], spectrum?: number[] }) {
+export function TranscriptPanel({ transcripts, spectrum, livePartial }: { transcripts: Transcript[], spectrum?: number[], livePartial?: string | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -65,7 +65,22 @@ export function TranscriptPanel({ transcripts, spectrum }: { transcripts: Transc
         ref={containerRef}
         className="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-xs"
       >
-        {renderItems.length === 0 ? (
+        {/* Live partial — instant speech detection feedback */}
+        {livePartial && (
+          <div className="flex flex-col pb-3 mb-3 border-b dark:border-white/5 border-black/5 animate-pulse">
+            <div className="flex items-start gap-2 text-xs">
+              <span className="dark:text-emerald-400/60 text-emerald-600/60 font-mono shrink-0 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-[pulse_0.5s_ease-in-out_infinite]"></span>
+                LIVE
+              </span>
+              <div className="dark:text-white/30 text-black/30 font-mono leading-tight tracking-tight italic">
+                "{livePartial}"
+              </div>
+            </div>
+          </div>
+        )}
+
+        {renderItems.length === 0 && !livePartial ? (
           <div className="dark:text-white/20 text-black/30 italic text-sm font-sans">Waiting for audio transmission...</div>
         ) : (
           [...renderItems].reverse().map((item) => {

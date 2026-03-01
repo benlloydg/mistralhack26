@@ -28,7 +28,7 @@ from ..agents.vision_agent import analyze_frame, compute_scene_delta
 from ..services.state import StateManager
 from ..services.transcription import translate_to_english
 from ..services.tts import generate_and_save
-from ..services.media import extract_frame, extract_audio_pcm
+from ..services.media import extract_frame, extract_audio_pcm, get_video_duration
 from ..services.scribe_realtime import ScribeRealtimeService
 from ..models.incident import Severity, IncidentStatus
 
@@ -49,9 +49,10 @@ def detect_video() -> str | None:
             return os.path.join(assets, f)
     return None
 
-# Vision timestamps (seconds into video)
-VISION_FRAME_1_S = 25.0
-VISION_FRAME_2_S = 38.0
+# Vision: continuous frame analysis every N seconds
+VISION_START_S = 3.0      # Start vision analysis 3s into video
+VISION_INTERVAL_S = 3.0   # Analyze a frame every 3 seconds
+# No max frames — runs until video ends or demo is cancelled
 
 
 class DemoOrchestrator:
@@ -218,8 +219,22 @@ class DemoOrchestrator:
                        color="green")
         self.state.update_state(caller_count=self._transcript_count)
 
-        # Write raw transcript to Supabase IMMEDIATELY so it appears in
-        # the Scene Audio feed before agent processing starts
+        # Write raw transcript to Supabase IMMEDIATELY (fire-and-forget)
+        # so it appears in the Scene Audio feed before agent processing starts
+        asyncio.create_task(self._insert_raw_transcript(
+            text, language, feed_id, segment_index))
+
+        # Launch pipeline as concurrent task — don't block audio streaming
+        task = asyncio.create_task(
+            self._process_transcript(text, language, feed_id, segment_index),
+            name=f"pipeline_{segment_index}",
+        )
+        self._pipeline_tasks.append(task)
+
+    async def _insert_raw_transcript(
+        self, text: str, language: str, feed_id: str, segment_index: int
+    ):
+        """Fire-and-forget raw transcript insert."""
         try:
             self.deps.supabase.table("transcripts").insert({
                 "case_id": self.deps.case_id,
@@ -235,13 +250,6 @@ class DemoOrchestrator:
         except Exception as e:
             logger.debug(f"Immediate transcript insert error: {e}")
 
-        # Launch pipeline as concurrent task — don't block audio streaming
-        task = asyncio.create_task(
-            self._process_transcript(text, language, feed_id, segment_index),
-            name=f"pipeline_{segment_index}",
-        )
-        self._pipeline_tasks.append(task)
-
     async def _process_transcript(
         self,
         text: str,
@@ -250,40 +258,42 @@ class DemoOrchestrator:
         segment_index: int,
     ):
         """
-        Full agent pipeline for a single committed transcript.
-        Runs as fast as possible for minimal latency:
-        1. Translate to English (if needed)
-        2. Extract intake facts
-        3. Write transcript + facts to Supabase
-        4. Run triage (updates severity, recommended units)
-        5. Evidence fusion (if 2+ transcripts)
-        6. Check evacuation conditions
+        LATENCY-OPTIMIZED agent pipeline for a single committed transcript.
+        Every millisecond counts in emergency dispatch.
+
+        Optimization strategy:
+        1. Translation + intake run IN PARALLEL (saves ~1s)
+        2. Translation pushed to UI IMMEDIATELY (don't wait for intake)
+        3. Triage runs as soon as facts are ready
+        4. Evidence fusion is DEFERRED to background (not on critical path)
+        5. Supabase writes are fire-and-forget where possible
         """
         pipeline_start = time.time()
         try:
-            # 1. Translate to English
-            translated = await translate_to_english(text, language, self.deps.mistral_client)
+            # ── PHASE 1: Translate + Intake in PARALLEL ──
+            # Intake agent handles multilingual text — no need to wait for translation
+            translate_task = translate_to_english(text, language, self.deps.mistral_client)
+            intake_task = intake_agent.run(
+                f"Emergency caller transcript ({language}): {text}",
+                deps=self.deps,
+            )
+            translated, facts_result = await asyncio.gather(translate_task, intake_task)
+            facts = facts_result.output
+
+            t_phase1 = time.time() - pipeline_start
             self.state.log("voice", "translated",
                            f"[{feed_id}] → {translated[:60]}",
                            color="blue")
-
-            # 2. Extract intake facts
-            facts_result = await intake_agent.run(
-                f"Transcript from emergency caller ({language}): {translated}",
-                deps=self.deps,
-            )
-            facts = facts_result.output
             self.state.log("intake", "facts_extracted",
                            f"{facts.incident_type_candidate or '—'} @ {facts.location_raw or 'unknown location'}",
                            color="blue")
 
-            # 3. Update the existing transcript row with translation + facts
-            self.deps.supabase.table("transcripts").update({
-                "translated_text": translated if language != "en" else None,
-                "facts_extracted": facts.model_dump(),
-            }).eq("case_id", self.deps.case_id).eq("segment_index", segment_index).execute()
+            # ── PHASE 2: Push translation + facts to UI IMMEDIATELY ──
+            # Fire-and-forget — don't block triage waiting for Supabase
+            asyncio.create_task(self._update_transcript_row(
+                segment_index, translated, language, facts))
 
-            # 4. Update incident state with facts
+            # Update incident state with facts (in-memory, fast)
             update_kwargs = {}
             if facts.location_raw and segment_index <= 2:
                 update_kwargs["location_raw"] = facts.location_raw
@@ -293,7 +303,7 @@ class DemoOrchestrator:
             if update_kwargs:
                 self.state.update_state(**update_kwargs)
 
-            # 5. Run triage
+            # ── PHASE 3: Triage (critical path — must await) ──
             triage_result = await triage_agent.run(
                 "Classify this incident based on all current evidence. "
                 "A new transcript has just been committed.",
@@ -327,20 +337,18 @@ class DemoOrchestrator:
                            color="amber" if triage.severity in (Severity.MEDIUM, Severity.HIGH) else "red",
                            flash=triage.severity in (Severity.HIGH, Severity.CRITICAL))
 
-            # 6. Evidence fusion if 2+ transcripts
+            # ── PHASE 4: Evidence fusion — DEFERRED to background ──
+            # Not on critical path. Evacuation warnings still fire if needed.
             if self._transcript_count >= 2:
-                fusion_result = await evidence_fusion_agent.run(
-                    "New transcript committed. Fuse all evidence — check for corroborations.",
-                    deps=self.deps,
+                fusion_task = asyncio.create_task(
+                    self._run_evidence_fusion(segment_index),
+                    name=f"fusion_{segment_index}",
                 )
-                fusion = fusion_result.output
-                self._log_fusion_result(fusion, segment_index)
-                if fusion.evacuation_warning_required and not self._evacuation_sent:
-                    await self._send_evacuation_warnings()
+                self._pipeline_tasks.append(fusion_task)
 
             elapsed = time.time() - pipeline_start
             self.state.log("orchestrator", "pipeline_complete",
-                           f"Pipeline for segment {segment_index} complete ({elapsed:.1f}s)",
+                           f"Segment {segment_index}: {t_phase1:.1f}s translate+intake, {elapsed:.1f}s total",
                            color="blue")
 
         except Exception as e:
@@ -348,109 +356,170 @@ class DemoOrchestrator:
             self.state.log("orchestrator", "pipeline_error",
                            f"Pipeline error: {e}", color="red")
 
+    async def _update_transcript_row(
+        self, segment_index: int, translated: str, language: str, facts
+    ):
+        """Fire-and-forget update of transcript row with translation + facts."""
+        try:
+            self.deps.supabase.table("transcripts").update({
+                "translated_text": translated if language != "en" else None,
+                "facts_extracted": facts.model_dump(),
+            }).eq("case_id", self.deps.case_id).eq("segment_index", segment_index).execute()
+        except Exception as e:
+            logger.debug(f"Transcript update error (non-fatal): {e}")
+
+    async def _run_evidence_fusion(self, segment_index: int):
+        """Background evidence fusion — not on critical path."""
+        try:
+            fusion_result = await evidence_fusion_agent.run(
+                "New transcript committed. Fuse all evidence — check for corroborations.",
+                deps=self.deps,
+            )
+            fusion = fusion_result.output
+            self._log_fusion_result(fusion, segment_index)
+            if fusion.evacuation_warning_required and not self._evacuation_sent:
+                await self._send_evacuation_warnings()
+        except Exception as e:
+            logger.error(f"Evidence fusion error: {e}", exc_info=True)
+
     # ----------------------------------------------------------------
-    # Vision pipeline — runs independently from audio
+    # Vision pipeline — continuous frame analysis
     # ----------------------------------------------------------------
 
     async def _run_vision(self, video_path: str):
         """
-        Run vision analysis on video frames at predetermined timestamps.
-        Runs in parallel with audio streaming.
+        Continuous vision analysis: extract and analyze frames every VISION_INTERVAL_S.
+        Each frame analysis runs as an overlapping task so we don't block waiting
+        for the API while the next frame is being extracted.
         """
         if not os.path.exists(video_path):
             return
 
-        # Wait a bit so we have some transcript context first
-        await asyncio.sleep(VISION_FRAME_1_S)
+        frames_dir = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "frames")
+        os.makedirs(frames_dir, exist_ok=True)
+
+        # Get video duration to know when to stop
+        video_duration = await get_video_duration(video_path)
+        self.state.log("vision", "init",
+                       f"Video: {video_duration:.0f}s, frames every {VISION_INTERVAL_S:.0f}s",
+                       color="purple")
+
+        # Wait before first frame
+        await asyncio.sleep(VISION_START_S)
         if self._cancelled:
             return
 
-        self.state.log("vision", "scanning", "CCTV analysis active", color="purple")
+        self.state.log("vision", "scanning", "CCTV analysis active — continuous monitoring", color="purple")
 
-        # Frame 1
+        prev_analysis = None
+        frame_count = 0
+        vision_tasks = []
+
+        while not self._cancelled:
+            frame_count += 1
+            timestamp = VISION_START_S + (frame_count - 1) * VISION_INTERVAL_S
+
+            # Stop when we've exceeded video duration
+            if timestamp > video_duration:
+                break
+
+            # Extract frame (fast, ~100ms)
+            try:
+                frame_bytes = await extract_frame(video_path, timestamp_s=timestamp)
+                if not frame_bytes or len(frame_bytes) < 100:
+                    logger.debug(f"Vision frame {frame_count} at {timestamp:.1f}s: empty/too small, skipping")
+                    await asyncio.sleep(VISION_INTERVAL_S)
+                    continue
+
+                # Save to disk
+                frame_path = os.path.join(frames_dir, f"{self.deps.case_id}_t{int(timestamp)}s.jpg")
+                with open(frame_path, "wb") as f:
+                    f.write(frame_bytes)
+
+                # Launch analysis as concurrent task (don't block for API latency)
+                task = asyncio.create_task(
+                    self._analyze_and_update_vision(
+                        frame_bytes, frame_count, timestamp, prev_analysis),
+                    name=f"vision_frame_{frame_count}",
+                )
+                vision_tasks.append(task)
+
+            except Exception as e:
+                logger.error(f"Vision frame {frame_count} extraction error: {e}")
+
+            # Wait for next frame interval
+            await asyncio.sleep(VISION_INTERVAL_S)
+
+        # Wait for all analysis tasks to complete
+        if vision_tasks:
+            self.state.log("vision", "finalizing",
+                           f"Waiting for {len(vision_tasks)} frame analyses to complete...")
+            await asyncio.gather(*vision_tasks, return_exceptions=True)
+
+    async def _analyze_and_update_vision(
+        self,
+        frame_bytes: bytes,
+        frame_id: int,
+        timestamp: float,
+        prev_analysis,
+    ):
+        """Analyze a single frame and update state. Runs concurrently."""
+        t0 = time.time()
         try:
-            frame_bytes_1 = await extract_frame(video_path, timestamp_s=VISION_FRAME_1_S)
-            # Save frame to disk for after-action report
-            frames_dir = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "frames")
-            os.makedirs(frames_dir, exist_ok=True)
-            frame_path_1 = os.path.join(frames_dir, f"{self.deps.case_id}_t{int(VISION_FRAME_1_S)}s.jpg")
-            with open(frame_path_1, "wb") as f:
-                f.write(frame_bytes_1)
-            analysis_1 = await analyze_frame(self.deps.mistral_client, frame_bytes_1, frame_id=1)
+            analysis = await analyze_frame(self.deps.mistral_client, frame_bytes, frame_id=frame_id)
+            elapsed = time.time() - t0
             self.state.log("vision", "detection",
-                           f"Frame 1 analysis: {analysis_1.overall_description}",
+                           f"Frame {frame_id} ({timestamp:.0f}s, {elapsed:.1f}s): {analysis.overall_description}",
                            color="purple")
 
-            # Update state with vision detections
+            # Update state with detections
             state = self.state.get_state()
-            detections = state.vision_detections + [d.model_dump() for d in analysis_1.detections]
+            detections = state.vision_detections + [d.model_dump() for d in analysis.detections]
             hazards = list(set(state.hazard_flags))
-            if analysis_1.smoke_visible:
+            if analysis.smoke_visible:
                 hazards = list(set(hazards + ["smoke"]))
-            self.state.update_state(vision_detections=detections, hazard_flags=hazards)
-        except Exception as e:
-            logger.error(f"Vision frame 1 error: {e}")
-            analysis_1 = None
-
-        # Wait for Frame 2 timestamp
-        await asyncio.sleep(VISION_FRAME_2_S - VISION_FRAME_1_S)
-        if self._cancelled:
-            return
-
-        # Frame 2
-        try:
-            frame_bytes_2 = await extract_frame(video_path, timestamp_s=VISION_FRAME_2_S)
-            # Save frame to disk for after-action report
-            frame_path_2 = os.path.join(frames_dir, f"{self.deps.case_id}_t{int(VISION_FRAME_2_S)}s.jpg")
-            with open(frame_path_2, "wb") as f:
-                f.write(frame_bytes_2)
-            analysis_2 = await analyze_frame(self.deps.mistral_client, frame_bytes_2, frame_id=2)
-            delta = compute_scene_delta(analysis_1, analysis_2)
-
-            if delta.get("hazard_escalation"):
-                self.state.log("vision", "hazard_escalation",
-                               f"HAZARD ESCALATION: {delta.get('new_hazard', 'unknown')}",
-                               color="red", flash=True)
-
-            state = self.state.get_state()
-            detections = state.vision_detections + [d.model_dump() for d in analysis_2.detections]
-            hazards = list(set(state.hazard_flags))
-            if analysis_2.fire_visible:
+            if analysis.fire_visible:
                 hazards = list(set(hazards + ["engine_fire"]))
-            if analysis_2.smoke_visible:
-                hazards = list(set(hazards + ["smoke"]))
             self.state.update_state(vision_detections=detections, hazard_flags=hazards)
 
-            # Re-triage with vision evidence
-            triage_result = await triage_agent.run(
-                "Re-classify. New vision evidence available. Check for fire/smoke.",
-                deps=self.deps,
-            )
-            triage = triage_result.output
-            self.state.update_state(
-                severity=triage.severity.value,
-                recommended_units=triage.recommended_units,
-                action_plan_version=state.action_plan_version + 1,
-                action_plan=[a.model_dump() for a in triage.action_plan],
-                status=(IncidentStatus.ESCALATED.value
-                        if triage.severity in (Severity.HIGH, Severity.CRITICAL)
-                        else state.status),
-            )
+            # Detect escalation via scene delta
+            if prev_analysis:
+                delta = compute_scene_delta(prev_analysis, analysis)
+                if delta.get("hazard_escalation"):
+                    self.state.log("vision", "hazard_escalation",
+                                   f"HAZARD ESCALATION: {delta.get('new_hazard', 'unknown')}",
+                                   color="red", flash=True)
 
-            # Evidence fusion with vision — cross-modal corroboration
-            if self._transcript_count >= 1:
-                fusion_result = await evidence_fusion_agent.run(
-                    "Vision evidence updated. Fire/smoke detected by CCTV. "
-                    "Correlate with caller reports.",
+            # Re-triage with vision evidence (every other frame to limit API calls)
+            if frame_id % 2 == 0 or analysis.fire_visible:
+                triage_result = await triage_agent.run(
+                    "Re-classify. New vision evidence available. Check for fire/smoke.",
                     deps=self.deps,
                 )
-                fusion = fusion_result.output
-                self._log_fusion_result(fusion, vision_frame=2)
-                if fusion.evacuation_warning_required and not self._evacuation_sent:
-                    await self._send_evacuation_warnings()
+                triage = triage_result.output
+                self.state.update_state(
+                    severity=triage.severity.value,
+                    recommended_units=triage.recommended_units,
+                    action_plan_version=state.action_plan_version + 1,
+                    action_plan=[a.model_dump() for a in triage.action_plan],
+                    status=(IncidentStatus.ESCALATED.value
+                            if triage.severity in (Severity.HIGH, Severity.CRITICAL)
+                            else state.status),
+                )
+
+                # Cross-modal fusion when we have both audio + vision
+                if self._transcript_count >= 1:
+                    fusion_result = await evidence_fusion_agent.run(
+                        "Vision evidence updated. Correlate with caller reports.",
+                        deps=self.deps,
+                    )
+                    fusion = fusion_result.output
+                    self._log_fusion_result(fusion, vision_frame=frame_id)
+                    if fusion.evacuation_warning_required and not self._evacuation_sent:
+                        await self._send_evacuation_warnings()
 
         except Exception as e:
-            logger.error(f"Vision frame 2 error: {e}")
+            logger.error(f"Vision frame {frame_id} analysis error: {e}")
 
     # ----------------------------------------------------------------
     # Evacuation warnings
@@ -466,15 +535,13 @@ class DemoOrchestrator:
                        "PRIORITY INTERRUPT — Hazard warning to all callers",
                        color="red", flash=True)
 
-        # Determine broadcast languages from detected feeds, normalizing "unknown"
-        detected_langs = self._scribe.feed_registry.languages if self._scribe else []
-        languages = list(dict.fromkeys(
-            lang if lang != "unknown" else "en" for lang in detected_langs
-        ))
-        if not languages:
-            languages = ["en"]
-
+        # Broadcast in ALL supported languages — in an emergency, cover every language
         warning_templates = {
+            "en": (
+                "Attention! Fire detected in the area. "
+                "Move away from the vehicle immediately. Fire department is en route.",
+                None,
+            ),
             "es": (
                 "¡Atención! Se ha detectado fuego. "
                 "Aléjense del área inmediatamente. Los bomberos están en camino.",
@@ -489,12 +556,14 @@ class DemoOrchestrator:
                 "Éloignez-vous immédiatement. Les pompiers sont en route.",
                 "Attention! Fire detected. Move away immediately. Fire department en route."
             ),
-            "en": (
-                "Attention! Fire detected in the area. "
-                "Move away from the vehicle immediately. Fire department is en route.",
-                None,
-            ),
         }
+
+        # Use all template languages — detected languages just for logging
+        detected_langs = self._scribe.feed_registry.languages if self._scribe else []
+        languages = list(warning_templates.keys())
+        self.state.log("voice", "broadcast_languages",
+                       f"Detected: {detected_langs}, broadcasting: {languages}",
+                       color="amber")
 
         for lang in languages:
             warning_text, translation = warning_templates.get(

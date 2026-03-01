@@ -42,7 +42,7 @@ async def analyze_frame(
     """Send a frame to Pixtral for scene analysis. Returns typed FrameAnalysis."""
     b64 = base64.b64encode(frame_bytes).decode("utf-8")
 
-    response = mistral_client.chat.complete(
+    response = await mistral_client.chat.complete_async(
         model=settings.mistral_vision_model,
         messages=[
             {"role": "system", "content": VISION_SYSTEM_PROMPT},

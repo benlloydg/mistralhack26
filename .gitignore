@@ -40,3 +40,4 @@ uv.lock
 # Media Assets
 apps/server/assets/
 apps/web/public/video/
+.claude/settings.local.json

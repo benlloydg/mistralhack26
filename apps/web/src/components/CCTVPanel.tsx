@@ -31,23 +31,24 @@ export function CCTVPanel({
   // State to track if user has interacted to allow AudioContext
   const [audioInitialized, setAudioInitialized] = useState(false);
 
-  // Initialize Audio Analyser
+  // Initialize Audio Analyser when video starts playing
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !onAudioSpectrum || !audioInitialized) return;
+
+    const handlePlay = () => {
        if (!audioContextRef.current) {
          try {
            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
            const ctx = new AudioContext();
            const analyser = ctx.createAnalyser();
            
-           // Fast Fourier Transform size (higher = more resolution, we only need 10 bars so 64 is plenty)
            analyser.fftSize = 64; 
-           analyser.smoothingTimeConstant = 0.8; // Smooth out the jumps
+           analyser.smoothingTimeConstant = 0.8; 
 
            const source = ctx.createMediaElementSource(video);
            source.connect(analyser);
-           analyser.connect(ctx.destination); // Ensure audio plays through speakers
+           analyser.connect(ctx.destination); 
 
            audioContextRef.current = ctx;
            analyserRef.current = analyser;
@@ -56,21 +57,17 @@ export function CCTVPanel({
          }
        }
 
-       // Start Analysis Loop
        const updateSpectrum = () => {
          if (analyserRef.current && onAudioSpectrum) {
            const bufferLength = analyserRef.current.frequencyBinCount;
            const dataArray = new Uint8Array(bufferLength);
            analyserRef.current.getByteFrequencyData(dataArray);
 
-           // dataArray length is 32 (fftSize/2). We only want 10 bars for the UI.
-           // We'll sample 10 points evenly.
            const numBars = 10;
            const step = Math.floor(dataArray.length / numBars);
            const barData: number[] = [];
            
            for (let i = 0; i < numBars; i++) {
-             // Map 0-255 strictly to a 0.0 - 1.0 percentage scale
              const p = dataArray[i * step] / 255.0;
              barData.push(p);
            }
@@ -81,8 +78,17 @@ export function CCTVPanel({
        };
 
        updateSpectrum();
+    };
+
+    video.addEventListener('play', handlePlay);
+    
+    // If it's already playing when the effect runs, trigger manually
+    if (!video.paused) {
+      handlePlay();
+    }
 
     return () => {
+      video.removeEventListener('play', handlePlay);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
@@ -109,7 +115,6 @@ export function CCTVPanel({
         <video 
           ref={videoRef}
           src="/video/crash_01.mp4" 
-          autoPlay={audioInitialized}
           loop 
           crossOrigin="anonymous"
           playsInline 
@@ -121,7 +126,13 @@ export function CCTVPanel({
         {!audioInitialized && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
             <button 
-              onClick={() => setAudioInitialized(true)}
+              onClick={() => {
+                setAudioInitialized(true);
+                // Manually trigger play since we removed autoPlay to satisfy browser policies
+                if (videoRef.current) {
+                  videoRef.current.play().catch(e => console.error("Playback failed:", e));
+                }
+              }}
               className="flex items-center gap-3 px-6 py-3 border border-blue-500/50 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-mono text-xs uppercase tracking-widest rounded-sm transition-all animate-pulse hover:animate-none"
             >
               <Volume2 className="w-4 h-4" /> Initialize Audio Sync

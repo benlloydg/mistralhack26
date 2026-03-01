@@ -6,6 +6,8 @@ export function useTranscripts(caseId: string) {
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
 
   useEffect(() => {
+    if (!caseId) return;
+
     // Initial fetch
     supabase
       .from('transcripts')
@@ -16,7 +18,7 @@ export function useTranscripts(caseId: string) {
         if (data) setTranscripts(data as Transcript[]);
       });
 
-    // Realtime — listen for new inserts
+    // Realtime — listen for inserts AND updates (translation arrives via UPDATE)
     const channel = supabase
       .channel(`transcripts_${caseId}`)
       .on(
@@ -29,6 +31,25 @@ export function useTranscripts(caseId: string) {
         },
         (payload) => {
           setTranscripts((prev) => [...prev, payload.new as Transcript]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'transcripts',
+          filter: `case_id=eq.${caseId}`,
+        },
+        (payload) => {
+          // Replace the existing transcript with the updated version
+          setTranscripts((prev) =>
+            prev.map((t) =>
+              t.id === (payload.new as Transcript).id
+                ? (payload.new as Transcript)
+                : t
+            )
+          );
         }
       )
       .subscribe();

@@ -93,6 +93,9 @@ class ScribeRealtimeService:
                 audio_format=AudioFormat.PCM_16000,
                 sample_rate=SAMPLE_RATE,
                 commit_strategy=CommitStrategy.VAD,
+                vad_silence_threshold_secs=0.8,  # Commit faster (default 1.5s)
+                vad_threshold=0.3,  # More sensitive speech detection (default 0.4)
+                min_silence_duration_ms=50,  # Detect shorter pauses
                 include_timestamps=True,
             )
         )

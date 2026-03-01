@@ -2,14 +2,33 @@ import { IncidentState } from "@/lib/types";
 import { Volume2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
-const TIMED_SCENES = [
-  { time: 13, desc: "Severe collision, active engine fire", detections: [{label: 'collision', conf: 0.99}, {label: 'fire', conf: 0.95}, {label: 'smoke', conf: 0.90}] },
-  { time: 10, desc: "Truck and car engulfed in flames", detections: [{label: 'collision', conf: 0.99}, {label: 'fire', conf: 0.95}, {label: 'smoke', conf: 0.90}] },
-  { time: 7, desc: "Severe collision with engine fire and debris", detections: [{label: 'collision', conf: 0.99}, {label: 'fire', conf: 0.99}, {label: 'smoke', conf: 0.95}] },
-  { time: 5, desc: "Vehicle collision with smoke and possible fire", detections: [{label: 'collision', conf: 0.95}, {label: 'smoke', conf: 0.90}, {label: 'fire', conf: 0.80}] },
-  { time: 3, desc: "Possible collision involving truck and car", detections: [{label: 'collision', conf: 0.80}, {label: 'persons', conf: 0.90}] },
-  { time: 0, desc: "Nighttime intersection with light traffic", detections: [{label: 'persons', conf: 0.90}] }
-];
+// Derive detections from real vision API results in incident_state
+function deriveScene(state: IncidentState | null) {
+  if (!state || !state.vision_detections || state.vision_detections.length === 0) {
+    return { desc: "Scanning...", detections: [] };
+  }
+
+  // Deduplicate by type, keeping highest confidence per type
+  const byType = new Map<string, number>();
+  for (const det of state.vision_detections) {
+    const t = det.type || det.label || "unknown";
+    const c = det.confidence || det.conf || 0;
+    byType.set(t, Math.max(byType.get(t) || 0, c));
+  }
+
+  const detections = Array.from(byType.entries())
+    .map(([label, conf]) => ({ label: label.replace(/_/g, " "), conf }))
+    .sort((a, b) => b.conf - a.conf)
+    .slice(0, 5);
+
+  // Build description from hazard flags + incident type
+  const parts: string[] = [];
+  if (state.incident_type) parts.push(state.incident_type);
+  if (state.hazard_flags.length > 0) parts.push(state.hazard_flags.join(", "));
+  const desc = parts.length > 0 ? parts.join(" — ") : "Scene under analysis";
+
+  return { desc: desc.toUpperCase(), detections };
+}
 
 export function CCTVPanel({
   state,
@@ -97,7 +116,7 @@ export function CCTVPanel({
     };
   }, [audioInitialized, onAudioSpectrum]);
 
-  const currentScene = TIMED_SCENES.find(s => videoTime >= s.time) || TIMED_SCENES[TIMED_SCENES.length - 1];
+  const currentScene = deriveScene(state);
 
   return (
     <div className="flex flex-col h-full tech-glass relative overflow-hidden group">

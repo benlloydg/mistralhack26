@@ -1,0 +1,53 @@
+# DISPATCH — Video Generation Prompts
+
+---
+
+## CLIP 1 — 0:00 to 0:15 — "Impact"
+
+**START IMAGE:**
+A wet urban intersection at dusk seen from a fixed overhead security camera at 30 degrees, a dark navy blue sedan stopped at a green light in the center of the intersection, six relaxed pedestrians on the sidewalks, a three-story brown brick building with a dark green awning on the left, a two-story grey concrete building with chain-link fence on the right, warm sodium-orange street lights reflecting in rain-wet asphalt, deep blue-purple dusk sky, no other vehicles visible, calm and ordinary, flat desaturated surveillance camera quality, photorealistic, wide-angle 18mm lens with slight barrel distortion, digital noise grain.
+
+**END IMAGE:**
+The same wet intersection at dusk from the same overhead security camera, the dark navy blue sedan now crumpled against the far street light pole with its passenger side caved in and shattered windshield showing deployed airbags and one headlight pointing upward, a white box truck with an orange diamond-shaped HAZMAT placard marked "3" with a flame symbol stopped at a thirty-degree angle fifteen feet past impact with its front-right corner crushed, shattered glass and debris scattered across twenty-five feet of wet asphalt, a thin dust haze in the sodium light, eight people frozen in shock on the sidewalks with one woman reaching toward the sedan, no smoke no fire, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.
+
+**VIDEO PROMPT:**
+CCTV surveillance footage, a white box truck with an orange diamond HAZMAT placard marked "3" enters the frame from the top at high speed, runs the red light, and T-bones the dark navy sedan in the center of the intersection, violent impact, glass shatters, the sedan spins and crumples against a street light pole, debris scatters across wet asphalt, pedestrians on sidewalks freeze and turn toward the crash, dust cloud rises in sodium light, fixed camera, no camera movement.
+
+---
+
+## CLIP 2 — 0:15 to 0:30 — "Crowd Gathers, Smoke Begins"
+
+**START IMAGE:**
+(Same as Clip 1 end image.)
+
+**END IMAGE:**
+The same wet intersection at dusk from the same overhead security camera, the same crumpled navy sedan against the street light pole and the same angled white box truck with the orange diamond HAZMAT placard marked "3" clearly visible, a steady column of white-grey smoke rising eight feet from the sedan's buckled hood glowing warm in the sodium light, eleven people gathered close with a woman eight feet from the driver's door gesturing urgently and a man in a dark hoodie peering into the rear passenger window with hands cupped against the glass, no flames just moderate white-grey smoke, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.
+
+**VIDEO PROMPT:**
+CCTV surveillance footage, the dust haze slowly settles around the crashed vehicles, pedestrians cautiously approach the wreckage, a woman rushes toward the sedan's driver door, a man moves to the rear window and looks inside, more people gather from the sidewalks, thin white smoke begins rising from the sedan's engine compartment and slowly intensifies through the clip, the crowd focuses on the sedan not the smoke, fixed camera, no camera movement.
+
+---
+
+## CLIP 3 — 0:30 to 0:45 — "Fire Ignites"
+
+**START IMAGE:**
+(Same as Clip 2 end image.)
+
+**END IMAGE:**
+The same wet intersection at dusk from the same overhead security camera, the same crumpled navy sedan and angled white box truck with the orange diamond HAZMAT placard marked "3", bright orange-yellow flames three to four feet above the sedan's hood with thick black smoke billowing fifteen feet upward, harsh flickering firelight reflecting in shimmering orange pools on the wet asphalt, a man in a tan jacket twenty feet from the sedan pointing at the fire, nine people retreated to twenty to thirty feet back with alarmed body language, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.
+
+**VIDEO PROMPT:**
+CCTV surveillance footage, the white-grey smoke from the sedan's engine darkens to grey then black, the first orange flame appears at the base of the hood and grows into a visible engine fire, flames lick upward and intensify, a man in a tan jacket points at the fire and waves people back, the gathered crowd retreats from the wreckage pulling back to twenty or thirty feet, harsh orange firelight begins reflecting off the wet asphalt, fixed camera, no camera movement.
+
+---
+
+## CLIP 4 — 0:45 to 0:60 — "Evacuation and Explosion"
+
+**START IMAGE:**
+(Same as Clip 3 end image.)
+
+**END IMAGE:**
+The same wet intersection at dusk from the same overhead security camera, both vehicles destroyed and engulfed in intense orange-red flames with a massive column of thick black smoke filling the upper frame, the sedan a blackened shell with collapsed roof, the truck's cargo box blown open with panels peeled back and the orange HAZMAT placard scorched but faintly visible, twisted debris and scorch marks radiating fifty feet across the asphalt, the brick building's ground-floor windows shattered and awning torn, the intersection completely empty of people with not a single person anywhere in the frame, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.
+
+**VIDEO PROMPT:**
+CCTV surveillance footage, the crowd rapidly disperses and flees the intersection in all directions, the scene empties of people within seconds, then a violent explosion erupts from the sedan sending a fireball and shockwave outward, the truck's cargo box ruptures and ignites, both vehicles are engulfed in flames, debris flies outward shattering nearby building windows, a massive black smoke column rises, the intersection is left completely empty and devastated with no people in sight, fixed camera, no camera movement.

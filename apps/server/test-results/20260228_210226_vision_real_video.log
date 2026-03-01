@@ -1,4 +1,0 @@
-  File "<string>", line 15
-    if result.returncode \!= 0:
-                          ^
-SyntaxError: unexpected character after line continuation character

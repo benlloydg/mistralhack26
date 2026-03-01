@@ -1,21 +1,7 @@
 # TriageNet — Real-Time Emergency Dispatch System
 
 ```mermaid
-%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryColor': '#0a0a0a',
-    'primaryTextColor': '#f8fafc',
-    'primaryBorderColor': '#334155',
-    'lineColor': '#475569',
-    'secondaryColor': '#1e293b',
-    'tertiaryColor': '#0f172a',
-    'clusterBkg': '#09090b',
-    'clusterBorder': '#27272a',
-    'fontSize': '13px',
-    'fontFamily': 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
-  }
-}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#0a0a0a', 'primaryTextColor': '#f8fafc', 'primaryBorderColor': '#334155', 'lineColor': '#475569', 'secondaryColor': '#1e293b', 'tertiaryColor': '#0f172a', 'clusterBkg': '#09090b', 'clusterBorder': '#27272a', 'fontSize': '13px', 'fontFamily': 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' }}}%%
 flowchart TB
     %% Styling Classes
     classDef sponsor fill:#1e1b4b,stroke:#a855f7,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px

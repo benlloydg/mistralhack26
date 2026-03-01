@@ -135,7 +135,7 @@ export function CCTVPanel({
               }}
               className="flex items-center gap-3 px-6 py-3 border border-blue-500/50 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-mono text-xs uppercase tracking-widest rounded-sm transition-all animate-pulse hover:animate-none"
             >
-              <Volume2 className="w-4 h-4" /> Initialize Audio Sync
+              <Volume2 className="w-4 h-4" /> INITIATE FEED
             </button>
           </div>
         )}

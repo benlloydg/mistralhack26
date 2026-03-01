@@ -661,6 +661,7 @@ class DemoOrchestrator:
                 data=data,
                 color="green" if not fusion.evacuation_warning_required else "red",
                 flash=True,
+                model="mistral-large-latest",
             )
 
         # Log the fusion reasoning
@@ -671,6 +672,7 @@ class DemoOrchestrator:
                 fusion.reasoning,
                 data={"severity_delta": fusion.severity_delta},
                 color="purple",
+                model="mistral-large-latest",
             )
 
     # ----------------------------------------------------------------

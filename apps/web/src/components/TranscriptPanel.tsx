@@ -117,7 +117,7 @@ export function TranscriptPanel({ transcripts, spectrum }: { transcripts: Transc
                   </div>
                   
                   {t.translated_text && t.language !== 'en' && (
-                    <div className="dark:text-white/90 text-black/90 font-sans text-sm leading-tight mt-1">
+                    <div className="dark:text-white/90 text-black/90 font-sans text-sm leading-tight mt-1 ml-[82px]">
                       {t.translated_text}
                     </div>
                   )}

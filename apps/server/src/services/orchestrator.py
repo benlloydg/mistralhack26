@@ -304,16 +304,13 @@ class DemoOrchestrator:
             if update_kwargs:
                 self.state.update_state(**update_kwargs)
 
-            # ── PHASE 3: Triage (critical path — must await) ──
-            triage_result = await triage_agent.run(
-                "Classify this incident based on all current evidence. "
-                "A new transcript has just been committed.",
-                deps=self.deps,
-            )
+            # ── PHASE 3: Triage — single LLM call with evidence inline (no tools) ──
+            current_state = self.state.get_state()
+            evidence_str = self._build_evidence_string(current_state, text, translated, facts)
+            triage_result = await triage_agent.run(evidence_str, deps=self.deps)
             triage = triage_result.output
 
             # Merge injury/hazard flags (never downgrade)
-            current_state = self.state.get_state()
             merged_injuries = list(set(current_state.injury_flags + triage.injury_flags))
             merged_hazards = list(set(current_state.hazard_flags + triage.hazards))
 
@@ -403,12 +400,19 @@ class DemoOrchestrator:
             logger.debug(f"Transcript update error (non-fatal): {e}")
 
     async def _run_evidence_fusion(self, segment_index: int):
-        """Background evidence fusion — not on critical path."""
+        """Background evidence fusion — single LLM call with all evidence inline."""
         try:
-            fusion_result = await evidence_fusion_agent.run(
-                "New transcript committed. Fuse all evidence — check for corroborations.",
-                deps=self.deps,
+            state = self.state.get_state()
+            transcripts = self.deps.supabase.table("transcripts") \
+                .select("original_text, language, translated_text, feed_id") \
+                .eq("case_id", self.deps.case_id).execute()
+            evidence = (
+                f"CURRENT STATE: severity={state.severity}, hazards={state.hazard_flags}, "
+                f"injuries={state.injury_flags}, incident={state.incident_type}\n"
+                f"VISION: {state.vision_detections}\n"
+                f"TRANSCRIPTS: {transcripts.data}"
             )
+            fusion_result = await evidence_fusion_agent.run(evidence, deps=self.deps)
             fusion = fusion_result.output
             self._log_fusion_result(fusion, segment_index)
             if fusion.evacuation_warning_required and not self._evacuation_sent:
@@ -538,27 +542,54 @@ class DemoOrchestrator:
 
             # Re-triage with vision evidence (every other frame to limit API calls)
             if frame_id % 2 == 0 or analysis.fire_visible:
-                triage_result = await triage_agent.run(
-                    "Re-classify. New vision evidence available. Check for fire/smoke.",
-                    deps=self.deps,
+                # Build evidence string inline — no tool calls
+                refreshed = self.state.get_state()
+                vision_evidence = (
+                    f"CURRENT STATE: severity={refreshed.severity}, hazards={refreshed.hazard_flags}, "
+                    f"injuries={refreshed.injury_flags}, incident={refreshed.incident_type}\n"
+                    f"VISION DETECTIONS: {refreshed.vision_detections}\n"
+                    f"LATEST FRAME: {analysis.overall_description}, "
+                    f"smoke={analysis.smoke_visible}, fire={analysis.fire_visible}, "
+                    f"damage_severity={analysis.vehicle_damage_severity}"
                 )
+                triage_result = await triage_agent.run(vision_evidence, deps=self.deps)
                 triage = triage_result.output
                 self.state.update_state(
                     severity=triage.severity.value,
                     recommended_units=triage.recommended_units,
-                    action_plan_version=state.action_plan_version + 1,
+                    action_plan_version=refreshed.action_plan_version + 1,
                     action_plan=[a.model_dump() for a in triage.action_plan],
                     status=(IncidentStatus.ESCALATED.value
                             if triage.severity in (Severity.HIGH, Severity.CRITICAL)
-                            else state.status),
+                            else refreshed.status),
                 )
+
+                # Dispatch new units from vision triage
+                new_units = [u for u in triage.recommended_units if u not in self._dispatched_units]
+                if new_units:
+                    for unit in new_units:
+                        if unit not in self._dispatched_units:
+                            try:
+                                self.deps.supabase.table("dispatches").insert({
+                                    "case_id": self.deps.case_id,
+                                    "unit_type": unit,
+                                    "status": "recommended",
+                                }).execute()
+                            except Exception:
+                                pass
+                    asyncio.create_task(self._dispatch_units(new_units))
 
                 # Cross-modal fusion when we have both audio + vision
                 if self._transcript_count >= 1:
-                    fusion_result = await evidence_fusion_agent.run(
-                        "Vision evidence updated. Correlate with caller reports.",
-                        deps=self.deps,
+                    transcripts = self.deps.supabase.table("transcripts") \
+                        .select("original_text, language, translated_text, feed_id") \
+                        .eq("case_id", self.deps.case_id).execute()
+                    fusion_evidence = (
+                        f"CURRENT STATE: severity={refreshed.severity}, hazards={refreshed.hazard_flags}\n"
+                        f"VISION: {refreshed.vision_detections}\n"
+                        f"TRANSCRIPTS: {transcripts.data}"
                     )
+                    fusion_result = await evidence_fusion_agent.run(fusion_evidence, deps=self.deps)
                     fusion = fusion_result.output
                     self._log_fusion_result(fusion, vision_frame=frame_id)
                     if fusion.evacuation_warning_required and not self._evacuation_sent:
@@ -841,6 +872,22 @@ class DemoOrchestrator:
     # ----------------------------------------------------------------
     # Helpers
     # ----------------------------------------------------------------
+
+    def _build_evidence_string(self, state, new_text: str, translated: str, facts) -> str:
+        """Build a complete evidence string for triage — eliminates need for tool calls."""
+        return (
+            f"CLASSIFY THIS INCIDENT. All evidence below:\n\n"
+            f"NEW TRANSCRIPT: \"{new_text}\"\n"
+            f"TRANSLATION: \"{translated}\"\n"
+            f"EXTRACTED FACTS: {facts.model_dump()}\n\n"
+            f"CURRENT STATE: severity={state.severity}, status={state.status}, "
+            f"incident_type={state.incident_type}, location={state.location_raw}\n"
+            f"HAZARD FLAGS: {state.hazard_flags}\n"
+            f"INJURY FLAGS: {state.injury_flags}\n"
+            f"VISION DETECTIONS: {state.vision_detections}\n"
+            f"CALLER COUNT: {state.caller_count}, PEOPLE ESTIMATE: {state.people_count_estimate}\n"
+            f"CURRENT UNITS: {state.recommended_units}"
+        )
 
     def _update_demo_control(self, status: str, **kwargs):
         """Update demo_control table for frontend coordination."""

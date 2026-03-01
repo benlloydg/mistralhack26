@@ -63,7 +63,7 @@ export function TranscriptPanel({ transcripts, spectrum, livePartial }: { transc
 
       <div 
         ref={containerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-xs"
+        className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4 space-y-4 font-mono text-xs"
       >
         {/* Live partial — instant speech detection feedback */}
         {livePartial && (

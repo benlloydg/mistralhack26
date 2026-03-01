@@ -13,7 +13,7 @@ export function CaseFilePanel({ state }: { state: IncidentState | null }) {
 
   return (
     <div className="flex flex-col h-full tech-glass">
-      <div className="p-4 flex-1 overflow-y-auto flex flex-col justify-center">
+      <div className="p-4 flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col justify-center">
         {/* Header Section */}
         <div className="flex items-start justify-between mb-3">
           <div>

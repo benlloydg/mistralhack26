@@ -111,7 +111,7 @@ export function ResponseLanes({
         <div className="text-[10px] font-mono dark:text-white/30 text-slate-400">{allLanes.length} ACTIONS</div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4 space-y-3">
         {allLanes.length === 0 ? (
           <div className="dark:text-white/20 text-black/30 italic font-mono text-xs text-center mt-10">Awaiting tactical recommendations...</div>
         ) : (
@@ -246,24 +246,31 @@ export function ResponseLanes({
       </div>
 
       {/* Generate Report Card (Pinned to bottom) */}
-      {isResolved && (
-        <div className="p-3 border-t dark:border-white/10 border-black/10 dark:bg-black/20 bg-zinc-100 shrink-0">
-          <div className="flex items-center justify-between animate-in fade-in slide-in-from-bottom duration-500">
-            <div className="flex items-center gap-2">
-              <span className="text-blue-500 font-bold">📋</span>
-              <span className="font-mono text-[11px] font-bold tracking-widest uppercase text-blue-500">After-Action Report</span>
-            </div>
+      <div className="p-3 border-t dark:border-white/10 border-black/10 dark:bg-black/40 bg-zinc-100 shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={cn("font-bold", isResolved ? "text-blue-500" : "dark:text-white/20 text-black/20")}>📋</span>
+            <span className={cn("font-mono text-[11px] font-bold tracking-widest uppercase", isResolved ? "text-blue-500" : "dark:text-white/30 text-black/30")}>After-Action Report</span>
+          </div>
+          {isResolved ? (
             <a
               href={`http://localhost:8000/report/${caseId || 'demo'}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] uppercase font-mono font-bold tracking-widest bg-blue-500 hover:bg-blue-400 text-white px-3 py-1.5 rounded-sm shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all flex items-center gap-1.5 min-w-[100px] justify-center"
+              className="text-[10px] uppercase font-mono font-bold tracking-widest bg-blue-500 hover:bg-blue-400 text-white px-3 py-1.5 rounded-sm shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all flex items-center gap-1.5 min-w-[100px] justify-center animate-in fade-in"
             >
               <span className="animate-[pulse_2s_ease-in-out_infinite] inline-block">[GENERATE]</span>
             </a>
-          </div>
+          ) : (
+            <button
+              disabled
+              className="text-[10px] uppercase font-mono font-bold tracking-widest dark:bg-white/5 bg-black/5 dark:text-white/20 text-black/20 px-3 py-1.5 rounded-sm cursor-not-allowed flex items-center gap-1.5 min-w-[100px] justify-center"
+            >
+              [AWAITING]
+            </button>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

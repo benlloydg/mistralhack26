@@ -77,7 +77,7 @@ export function AgentTerminal({ logs }: { logs: AgentLog[] }) {
       
       <div 
         ref={containerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-[11px] sm:text-xs leading-relaxed"
+        className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4 space-y-3 font-mono text-[11px] sm:text-xs leading-relaxed"
       >
         {/* Blinking Cursor */}
         <div className="flex items-center gap-2 mb-3 pb-3 border-b dark:border-white/5 border-black/5 opacity-60 animate-in fade-in duration-300">

@@ -104,18 +104,19 @@ export function TranscriptPanel({ transcripts }: { transcripts: Transcript[] }) 
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2 text-xs">
                       <span className="dark:text-white/30 text-black/40 font-mono">[{new Date(t.created_at).toISOString().substring(11, 19)}]</span>
-                      <span className="uppercase text-blue-500 dark:text-blue-400 font-mono font-bold tracking-wider">
-                        {t.language.toUpperCase()}
-                      </span>
                     </div>
-                    {t.translated_text && t.language !== 'en' && (
-                      <span className="text-[9px] font-mono tracking-widest uppercase bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400">
-                        TRANSLATED
+                    {t.translated_text && t.language !== 'en' ? (
+                      <span className="text-[9px] font-mono tracking-widest uppercase bg-blue-500/10 dark:bg-blue-400/10 px-1.5 py-0.5 rounded text-blue-600 dark:text-blue-400 font-bold">
+                        {t.language.toUpperCase()} → EN
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-mono tracking-widest uppercase bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400 font-bold">
+                        {t.language.toUpperCase()}
                       </span>
                     )}
                   </div>
                   
-                  <div className="flex flex-col gap-1 pl-[82px]">
+                  <div className="flex flex-col gap-1">
                     {t.language !== 'en' && t.translated_text ? (
                       <>
                         <div className="dark:text-white/50 text-black/50 text-[11px] leading-relaxed font-sans">"{t.original_text}"</div>

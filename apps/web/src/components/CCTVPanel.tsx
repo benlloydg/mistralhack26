@@ -28,14 +28,13 @@ export function CCTVPanel({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Initialize Audio Analyser when video becomes active
+  // State to track if user has interacted to allow AudioContext
+  const [audioInitialized, setAudioInitialized] = useState(false);
+
+  // Initialize Audio Analyser
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !onAudioSpectrum) return;
-
-    // Handle play event to initialize audio context (must be after user interaction typically, 
-    // but autoplay muted can sometimes bypass, we'll try to hook it on play)
-    const handlePlay = () => {
+    if (!video || !onAudioSpectrum || !audioInitialized) return;
        if (!audioContextRef.current) {
          try {
            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -82,22 +81,13 @@ export function CCTVPanel({
        };
 
        updateSpectrum();
-    };
-
-    video.addEventListener('play', handlePlay);
-    
-    // If it's already playing when the effect runs, trigger manually
-    if (!video.paused) {
-      handlePlay();
-    }
 
     return () => {
-      video.removeEventListener('play', handlePlay);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isActive, onAudioSpectrum]);
+  }, [audioInitialized, onAudioSpectrum]);
 
   const currentScene = TIMED_SCENES.find(s => videoTime >= s.time) || TIMED_SCENES[TIMED_SCENES.length - 1];
 
@@ -119,13 +109,25 @@ export function CCTVPanel({
         <video 
           ref={videoRef}
           src="/video/crash_01.mp4" 
-          autoPlay 
+          autoPlay={audioInitialized}
           loop 
           crossOrigin="anonymous"
           playsInline 
           onTimeUpdate={(e) => setVideoTime(e.currentTarget.currentTime)}
-          className="absolute inset-0 w-full h-full object-cover opacity-60 dark:opacity-40 pointer-events-none" 
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none ${audioInitialized ? 'opacity-60 dark:opacity-40' : 'opacity-0'}`}
         />
+        
+        {/* Audio Initialization Overlay (Browser Policy Requirement) */}
+        {!audioInitialized && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <button 
+              onClick={() => setAudioInitialized(true)}
+              className="flex items-center gap-3 px-6 py-3 border border-blue-500/50 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-mono text-xs uppercase tracking-widest rounded-sm transition-all animate-pulse hover:animate-none"
+            >
+              <Volume2 className="w-4 h-4" /> Initialize Audio Sync
+            </button>
+          </div>
+        )}
         
         {/* Subtle CRT Scanline Overlay */}
         <div className="absolute inset-0 opacity-20 dark:opacity-30 pointer-events-none mix-blend-multiply dark:mix-blend-overlay" 

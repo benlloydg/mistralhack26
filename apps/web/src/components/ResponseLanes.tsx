@@ -9,6 +9,7 @@ export function ResponseLanes({
   recommendedUnits = [],
   onFirstExecute,
   onBroadcastStateChange,
+  onGenerateReport,
   isResolved,
   caseId
 }: {
@@ -17,6 +18,7 @@ export function ResponseLanes({
   recommendedUnits?: string[],
   onFirstExecute?: () => void,
   onBroadcastStateChange?: (isPlaying: boolean) => void,
+  onGenerateReport?: () => void,
   isResolved?: boolean,
   caseId?: string | null
 }) {
@@ -245,30 +247,28 @@ export function ResponseLanes({
         )}
       </div>
 
-      {/* Generate Report Card (Pinned to bottom) */}
+      {/* Generate Report Card (Pinned to bottom — always active) */}
       <div className="p-3 border-t dark:border-white/10 border-black/10 dark:bg-black/40 bg-zinc-100 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className={cn("font-bold", isResolved ? "text-blue-500" : "dark:text-white/20 text-black/20")}>📋</span>
-            <span className={cn("font-mono text-[11px] font-bold tracking-widest uppercase", isResolved ? "text-blue-500" : "dark:text-white/30 text-black/30")}>After-Action Report</span>
+            <span className="font-bold text-blue-500">📋</span>
+            <span className="font-mono text-[11px] font-bold tracking-widest uppercase text-blue-500">After-Action Report</span>
           </div>
-          {isResolved ? (
-            <a
-              href={`http://localhost:8000/report/${caseId || 'demo'}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[10px] uppercase font-mono font-bold tracking-widest bg-blue-500 hover:bg-blue-400 text-white px-3 py-1.5 rounded-sm shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all flex items-center gap-1.5 min-w-[100px] justify-center animate-in fade-in"
-            >
-              <span className="animate-[pulse_2s_ease-in-out_infinite] inline-block">[GENERATE]</span>
-            </a>
-          ) : (
-            <button
-              disabled
-              className="text-[10px] uppercase font-mono font-bold tracking-widest dark:bg-white/5 bg-black/5 dark:text-white/20 text-black/20 px-3 py-1.5 rounded-sm cursor-not-allowed flex items-center gap-1.5 min-w-[100px] justify-center"
-            >
-              [AWAITING]
-            </button>
-          )}
+          <button
+            onClick={() => {
+              if (onGenerateReport) onGenerateReport();
+              window.open(`http://localhost:8000/report/${caseId || 'demo'}`, '_blank');
+            }}
+            disabled={!caseId}
+            className={cn(
+              "text-[10px] uppercase font-mono font-bold tracking-widest px-3 py-1.5 rounded-sm transition-all flex items-center gap-1.5 min-w-[100px] justify-center",
+              caseId
+                ? "bg-blue-500 hover:bg-blue-400 text-white shadow-[0_0_15px_rgba(59,130,246,0.4)]"
+                : "dark:bg-white/5 bg-black/5 dark:text-white/20 text-black/20 cursor-not-allowed"
+            )}
+          >
+            <span className={cn(caseId && "animate-[pulse_2s_ease-in-out_infinite] inline-block")}>[END SIM + REPORT]</span>
+          </button>
         </div>
       </div>
     </div>

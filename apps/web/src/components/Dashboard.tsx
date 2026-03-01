@@ -95,6 +95,15 @@ export function Dashboard() {
     }
   };
 
+  const handleGenerateReport = async () => {
+    // End the simulation by approving dispatch, then report opens in new tab
+    try {
+      await fetch("http://localhost:8000/api/v1/demo/approve", { method: "POST" });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (showLanding) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center p-4 relative z-10 mx-auto dark:bg-zinc-950 bg-zinc-50 overflow-hidden">
@@ -219,6 +228,7 @@ export function Dashboard() {
                recommendedUnits={incidentState?.recommended_units || []}
                onFirstExecute={handleApprove}
                onBroadcastStateChange={setIsBroadcasting}
+               onGenerateReport={handleGenerateReport}
                isResolved={incidentState?.status === 'resolved_demo'}
                caseId={activeCaseId}
             />

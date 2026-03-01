@@ -26,7 +26,7 @@ def _generate_case_id() -> str:
 
 @router.post("/start")
 async def start_demo(background_tasks: BackgroundTasks):
-    """Create a new case and start the 120-second demo. Previous runs are preserved."""
+    """Create a new case and start the event-driven demo. Previous runs are preserved."""
     global _active_orchestrator, _active_case_id
     supabase = get_supabase()
     mistral = get_mistral()
@@ -56,6 +56,14 @@ async def start_demo(background_tasks: BackgroundTasks):
         "action_plan": [],
     }).execute()
 
+    # Create demo_control row for frontend coordination
+    supabase.table("demo_control").insert({
+        "case_id": case_id,
+        "status": "starting",
+        "approve_enabled": False,
+        "approve_clicked": False,
+    }).execute()
+
     deps = TriageNetDeps(
         supabase=supabase,
         mistral_client=mistral,
@@ -74,9 +82,18 @@ async def start_demo(background_tasks: BackgroundTasks):
 
 @router.post("/approve")
 async def approve_response():
-    """Operator approves initial response. Unblocks Phase 2 in orchestrator."""
+    """Operator approves dispatch. Unblocks dispatch generation in orchestrator."""
     if _active_orchestrator:
         _active_orchestrator.approve()
+        # Update demo_control
+        if _active_case_id:
+            try:
+                supabase = get_supabase()
+                supabase.table("demo_control").update({
+                    "approve_clicked": True,
+                }).eq("case_id", _active_case_id).execute()
+            except Exception:
+                pass
         return {"status": "approved", "case_id": _active_case_id}
     return {"status": "no_active_demo"}
 
@@ -134,6 +151,20 @@ async def get_case_report(case_id: str):
 async def reset_demo():
     """Stop any active demo. Does NOT delete historical runs."""
     global _active_orchestrator, _active_case_id
+
+    if _active_orchestrator:
+        _active_orchestrator.cancel()
+
+    # Update demo_control status
+    if _active_case_id:
+        try:
+            supabase = get_supabase()
+            supabase.table("demo_control").update({
+                "status": "reset",
+            }).eq("case_id", _active_case_id).execute()
+        except Exception:
+            pass
+
     _active_orchestrator = None
     old_case_id = _active_case_id
     _active_case_id = None

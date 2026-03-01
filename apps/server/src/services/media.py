@@ -1,6 +1,6 @@
 """
-Media utilities for extracting frames from video files.
-Uses ffmpeg subprocess for frame extraction.
+Media utilities for extracting frames and audio from video files.
+Uses ffmpeg subprocess for frame extraction and PCM audio extraction.
 """
 import asyncio
 import subprocess
@@ -49,6 +49,40 @@ def _extract_frame_sync(video_path: str, timestamp_s: float) -> bytes:
     if result.returncode != 0:
         raise RuntimeError(f"ffmpeg failed: {result.stderr.decode()}")
     return result.stdout
+
+
+async def extract_audio_pcm(video_path: str, output_path: str) -> str:
+    """
+    Extract mono 16-bit PCM audio at 16 kHz from a video file.
+    At 16 kHz 16-bit mono: 32,000 bytes = 1 second of audio.
+    Returns the output_path on success.
+    """
+    if not os.path.exists(video_path):
+        raise FileNotFoundError(f"Video not found: {video_path}")
+
+    # Skip re-extraction if PCM already exists and is newer than the video
+    if os.path.exists(output_path) and os.path.getmtime(output_path) >= os.path.getmtime(video_path):
+        return output_path
+
+    await asyncio.to_thread(_extract_audio_pcm_sync, video_path, output_path)
+    return output_path
+
+
+def _extract_audio_pcm_sync(video_path: str, output_path: str) -> None:
+    """Synchronous PCM audio extraction using ffmpeg."""
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", video_path,
+        "-vn",
+        "-acodec", "pcm_s16le",
+        "-ar", "16000",
+        "-ac", "1",
+        output_path,
+    ]
+    result = subprocess.run(cmd, capture_output=True, timeout=60)
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg PCM extraction failed: {result.stderr.decode()}")
 
 
 def _placeholder_frame() -> bytes:

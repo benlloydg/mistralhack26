@@ -1,53 +1,74 @@
-# DISPATCH — Video Generation Prompts
-
----
-
-## CLIP 1 — 0:00 to 0:15 — "Impact"
-
-**START IMAGE:**
-A wet urban intersection at dusk seen from a fixed overhead security camera at 30 degrees, a dark navy blue sedan stopped at a green light in the center of the intersection, six relaxed pedestrians on the sidewalks, a three-story brown brick building with a dark green awning on the left, a two-story grey concrete building with chain-link fence on the right, warm sodium-orange street lights reflecting in rain-wet asphalt, deep blue-purple dusk sky, no other vehicles visible, calm and ordinary, flat desaturated surveillance camera quality, photorealistic, wide-angle 18mm lens with slight barrel distortion, digital noise grain.
-
-**END IMAGE:**
-The same wet intersection at dusk from the same overhead security camera, the dark navy blue sedan now crumpled against the far street light pole with its passenger side caved in and shattered windshield showing deployed airbags and one headlight pointing upward, a white box truck with an orange diamond-shaped HAZMAT placard marked "3" with a flame symbol stopped at a thirty-degree angle fifteen feet past impact with its front-right corner crushed, shattered glass and debris scattered across twenty-five feet of wet asphalt, a thin dust haze in the sodium light, eight people frozen in shock on the sidewalks with one woman reaching toward the sedan, no smoke no fire, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.
-
-**VIDEO PROMPT:**
-CCTV surveillance footage, a white box truck with an orange diamond HAZMAT placard marked "3" enters the frame from the top at high speed, runs the red light, and T-bones the dark navy sedan in the center of the intersection, violent impact, glass shatters, the sedan spins and crumples against a street light pole, debris scatters across wet asphalt, pedestrians on sidewalks freeze and turn toward the crash, dust cloud rises in sodium light, fixed camera, no camera movement.
-
----
-
-## CLIP 2 — 0:15 to 0:30 — "Crowd Gathers, Smoke Begins"
-
-**START IMAGE:**
-(Same as Clip 1 end image.)
-
-**END IMAGE:**
-The same wet intersection at dusk from the same overhead security camera, the same crumpled navy sedan against the street light pole and the same angled white box truck with the orange diamond HAZMAT placard marked "3" clearly visible, a steady column of white-grey smoke rising eight feet from the sedan's buckled hood glowing warm in the sodium light, eleven people gathered close with a woman eight feet from the driver's door gesturing urgently and a man in a dark hoodie peering into the rear passenger window with hands cupped against the glass, no flames just moderate white-grey smoke, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.
-
-**VIDEO PROMPT:**
-CCTV surveillance footage, the dust haze slowly settles around the crashed vehicles, pedestrians cautiously approach the wreckage, a woman rushes toward the sedan's driver door, a man moves to the rear window and looks inside, more people gather from the sidewalks, thin white smoke begins rising from the sedan's engine compartment and slowly intensifies through the clip, the crowd focuses on the sedan not the smoke, fixed camera, no camera movement.
-
----
-
-## CLIP 3 — 0:30 to 0:45 — "Fire Ignites"
-
-**START IMAGE:**
-(Same as Clip 2 end image.)
-
-**END IMAGE:**
-The same wet intersection at dusk from the same overhead security camera, the same crumpled navy sedan and angled white box truck with the orange diamond HAZMAT placard marked "3", bright orange-yellow flames three to four feet above the sedan's hood with thick black smoke billowing fifteen feet upward, harsh flickering firelight reflecting in shimmering orange pools on the wet asphalt, a man in a tan jacket twenty feet from the sedan pointing at the fire, nine people retreated to twenty to thirty feet back with alarmed body language, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.
-
-**VIDEO PROMPT:**
-CCTV surveillance footage, the white-grey smoke from the sedan's engine darkens to grey then black, the first orange flame appears at the base of the hood and grows into a visible engine fire, flames lick upward and intensify, a man in a tan jacket points at the fire and waves people back, the gathered crowd retreats from the wreckage pulling back to twenty or thirty feet, harsh orange firelight begins reflecting off the wet asphalt, fixed camera, no camera movement.
-
----
-
-## CLIP 4 — 0:45 to 0:60 — "Evacuation and Explosion"
-
-**START IMAGE:**
-(Same as Clip 3 end image.)
-
-**END IMAGE:**
-The same wet intersection at dusk from the same overhead security camera, both vehicles destroyed and engulfed in intense orange-red flames with a massive column of thick black smoke filling the upper frame, the sedan a blackened shell with collapsed roof, the truck's cargo box blown open with panels peeled back and the orange HAZMAT placard scorched but faintly visible, twisted debris and scorch marks radiating fifty feet across the asphalt, the brick building's ground-floor windows shattered and awning torn, the intersection completely empty of people with not a single person anywhere in the frame, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.
-
-**VIDEO PROMPT:**
-CCTV surveillance footage, the crowd rapidly disperses and flees the intersection in all directions, the scene empties of people within seconds, then a violent explosion erupts from the sedan sending a fireball and shockwave outward, the truck's cargo box ruptures and ignites, both vehicles are engulfed in flames, debris flies outward shattering nearby building windows, a massive black smoke column rises, the intersection is left completely empty and devastated with no people in sight, fixed camera, no camera movement.
+[
+  {
+    "clip": 1,
+    "title": "Impact",
+    "start_time": "0:00",
+    "end_time": "0:15",
+    "start_image": "A wet urban intersection at dusk seen from a fixed overhead security camera at 30 degrees, a dark navy blue sedan stopped at a green light in the center of the intersection, six relaxed pedestrians on the sidewalks, a three-story brown brick building with a dark green awning on the left, a two-story grey concrete building with chain-link fence on the right, warm sodium-orange street lights reflecting in rain-wet asphalt, deep blue-purple dusk sky, no other vehicles visible, calm and ordinary, flat desaturated surveillance camera quality, photorealistic, wide-angle 18mm lens with slight barrel distortion, digital noise grain.",
+    "end_image": "The same wet intersection at dusk from the same overhead security camera, the dark navy blue sedan now crumpled against the far street light pole with its passenger side caved in and shattered windshield showing deployed airbags and one headlight pointing upward, a white box truck with an orange diamond-shaped HAZMAT placard marked \"3\" with a flame symbol stopped at a thirty-degree angle fifteen feet past impact with its front-right corner crushed, shattered glass and debris scattered across twenty-five feet of wet asphalt, a thin dust haze in the sodium light, eight people frozen in shock on the sidewalks with one woman reaching toward the sedan, no smoke no fire, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "video_prompt": "CCTV surveillance footage, a white box truck with an orange diamond HAZMAT placard marked \"3\" enters the frame from the top at high speed, runs the red light, and T-bones the dark navy sedan who is parked in the center of the intersection, violent impact, glass shatters, the sedan spins and crumples against a street light pole, debris scatters across wet asphalt, pedestrians on sidewalks freeze and turn toward the crash, dust cloud rises in sodium light, fixed camera, no camera movement."
+  },
+  {
+    "clip": 2,
+    "title": "Crowd Gathers, Smoke Begins",
+    "start_time": "0:15",
+    "end_time": "0:30",
+    "start_image": "The same wet intersection at dusk from the same overhead security camera, the dark navy blue sedan now crumpled against the far street light pole with its passenger side caved in and shattered windshield showing deployed airbags and one headlight pointing upward, a white box truck with an orange diamond-shaped HAZMAT placard marked \"3\" with a flame symbol stopped at a thirty-degree angle fifteen feet past impact with its front-right corner crushed, shattered glass and debris scattered across twenty-five feet of wet asphalt, a thin dust haze in the sodium light, eight people frozen in shock on the sidewalks with one woman reaching toward the sedan, no smoke no fire, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "end_image": "The same wet intersection at dusk from the same overhead security camera, the same crumpled navy sedan against the street light pole and the same angled white box truck with the orange diamond HAZMAT placard marked \"3\" clearly visible, a steady column of white-grey smoke rising eight feet from the sedan's buckled hood glowing warm in the sodium light, eleven people gathered close with a woman eight feet from the driver's door gesturing urgently and a man in a dark hoodie peering into the rear passenger window with hands cupped against the glass, no flames just moderate white-grey smoke, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "video_prompt": "CCTV surveillance footage, the dust haze slowly settles around the crashed vehicles, pedestrians cautiously approach the wreckage, a woman rushes toward the sedan's driver door, a man moves to the rear window and looks inside, more people gather from the sidewalks, thin white smoke begins rising from the sedan's engine compartment and slowly intensifies through the clip, the crowd focuses on the sedan not the smoke, fixed camera, no camera movement."
+  },
+  {
+    "clip": 3,
+    "title": "Fire Ignites",
+    "start_time": "0:30",
+    "end_time": "0:45",
+    "start_image": "The same wet intersection at dusk from the same overhead security camera, the same crumpled navy sedan against the street light pole and the same angled white box truck with the orange diamond HAZMAT placard marked \"3\" clearly visible, a steady column of white-grey smoke rising eight feet from the sedan's buckled hood glowing warm in the sodium light, eleven people gathered close with a woman eight feet from the driver's door gesturing urgently and a man in a dark hoodie peering into the rear passenger window with hands cupped against the glass, no flames just moderate white-grey smoke, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "end_image": "The same wet intersection at dusk from the same overhead security camera, the same crumpled navy sedan and angled white box truck with the orange diamond HAZMAT placard marked \"3\", bright orange-yellow flames three to four feet above the sedan's hood with thick black smoke billowing fifteen feet upward, harsh flickering firelight reflecting in shimmering orange pools on the wet asphalt, a man in a tan jacket twenty feet from the sedan pointing at the fire, nine people retreated to twenty to thirty feet back with alarmed body language, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "video_prompt": "CCTV surveillance footage, the white-grey smoke from the sedan's engine darkens to grey then black, the first orange flame appears at the base of the hood and grows into a visible engine fire, flames lick upward and intensify, a man in a tan jacket points at the fire and waves people back, the gathered crowd retreats from the wreckage pulling back to twenty or thirty feet, harsh orange firelight begins reflecting off the wet asphalt, fixed camera, no camera movement."
+  },
+  {
+    "clip": 4,
+    "title": "Evacuation and Explosion",
+    "start_time": "0:45",
+    "end_time": "1:00",
+    "start_image": "The same wet intersection at dusk from the same overhead security camera, the same crumpled navy sedan and angled white box truck with the orange diamond HAZMAT placard marked \"3\", bright orange-yellow flames three to four feet above the sedan's hood with thick black smoke billowing fifteen feet upward, harsh flickering firelight reflecting in shimmering orange pools on the wet asphalt, a man in a tan jacket twenty feet from the sedan pointing at the fire, nine people retreated to twenty to thirty feet back with alarmed body language, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "end_image": "The same wet intersection at dusk from the same overhead security camera, both vehicles destroyed and engulfed in intense orange-red flames with a massive column of thick black smoke filling the upper frame, the sedan a blackened shell with collapsed roof, the truck's cargo box blown open with panels peeled back and the orange HAZMAT placard scorched but faintly visible, twisted debris and scorch marks radiating fifty feet across the asphalt, the brick building's ground-floor windows shattered and awning torn, the intersection completely empty of people with not a single person anywhere in the frame, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "video_prompt": "CCTV surveillance footage, the crowd rapidly disperses and flees the intersection in all directions, the scene empties of people within seconds, then a violent explosion erupts from the sedan sending a fireball and shockwave outward, the truck's cargo box ruptures and ignites, both vehicles are engulfed in flames, debris flies outward shattering nearby building windows, a massive black smoke column rises, the intersection is left completely empty and devastated with no people in sight, fixed camera, no camera movement."
+  },
+  {
+    "clip": 5,
+    "title": "First Responder Arrives",
+    "start_time": "1:00",
+    "end_time": "1:15",
+    "start_image": "The same wet intersection at dusk from the same overhead security camera, both vehicles destroyed and engulfed in intense orange-red flames with a massive column of thick black smoke filling the upper frame, the sedan a blackened shell with collapsed roof, the truck's cargo box blown open with panels peeled back and the orange HAZMAT placard scorched but faintly visible, twisted debris and scorch marks radiating fifty feet across the asphalt, the brick building's ground-floor windows shattered and awning torn, the intersection completely empty of people, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "end_image": "The same wet intersection from the same overhead security camera, the same two burning vehicles with heavy black smoke, the same blast debris and shattered building windows, but now a white and blue police cruiser with flashing red and blue emergency lights is stopped diagonally across the east-west road about sixty feet east of the wreckage, its driver door open, a single police officer in dark uniform standing behind the cruiser door surveying the scene and speaking into a shoulder radio, orange traffic cones or flares not yet placed, the flashing red and blue lights reflecting off the wet asphalt and the building facades in alternating pulses, the intersection still empty of civilians, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "video_prompt": "CCTV surveillance footage, the two vehicles continue burning with heavy black smoke rising, the empty intersection sits in devastation for several seconds, then a police cruiser with flashing red and blue lights enters the frame from the east driving quickly, it stops diagonally across the road at a safe distance from the fire, the officer exits and takes a position behind the door assessing the scene, the flashing emergency lights reflect off the wet road, fixed camera, no camera movement."
+  },
+  {
+    "clip": 6,
+    "title": "Fire Engine Arrives",
+    "start_time": "1:15",
+    "end_time": "1:30",
+    "start_image": "The same wet intersection from the same overhead security camera, the two destroyed vehicles still burning with heavy black smoke, blast debris across the asphalt, shattered building windows, the police cruiser with flashing red and blue lights stopped diagonally on the east-west road sixty feet from the wreckage, the officer standing behind the door with shoulder radio, no civilians anywhere, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "end_image": "The same wet intersection from the same overhead security camera, the two vehicles still burning but the flames slightly lower than before, a large red fire engine with flashing red and white emergency lights now positioned on the north-south road about forty feet north of the wreckage, two firefighters in full tan-yellow turnout gear and helmets advancing toward the burning vehicles pulling a white fire hose that trails back to the engine, a third firefighter at the engine operating the pump panel, the police cruiser still in its position with the officer now standing in the road with arms directing and a line of orange traffic cones partially blocking the east-west road behind the cruiser, flashing red blue and white emergency lights from both vehicles reflecting across the wet asphalt, no civilians in the scene, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "video_prompt": "CCTV surveillance footage, the police officer moves from behind the cruiser door into the road and begins placing traffic cones to block the east-west approach, a large red fire engine with flashing lights enters the frame from the north and positions itself on the north-south road at a safe distance, firefighters in turnout gear climb down from the engine and begin pulling a hose line toward the burning vehicles, the officer directs them with arm gestures, the scene transitions from chaos to organized response, fixed camera, no camera movement."
+  },
+  {
+    "clip": 7,
+    "title": "Active Firefighting, Ambulance Stages",
+    "start_time": "1:30",
+    "end_time": "1:45",
+    "start_image": "The same wet intersection from the same overhead security camera, the two burning vehicles with flames slightly reduced, the red fire engine on the north-south road with firefighters advancing with a hose line, the police cruiser on the east-west road with traffic cones, the officer in the road directing, no civilians, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "end_image": "The same wet intersection from the same overhead security camera, a powerful white stream of water from the fire hose now hitting the burning sedan producing a large cloud of white steam mixed with dark smoke, the flames on the sedan visibly reduced and partially suppressed, two firefighters in turnout gear braced and holding the active hose about twenty feet from the sedan, the fire engine on the north-south road with its emergency lights flashing, a white and orange ambulance with flashing amber and red lights now parked on the east-west road behind the police cruiser, two paramedics in high-visibility vests standing at the rear of the ambulance with a gurney pulled out and ready, the police officer has set up a full line of orange cones creating a visible perimeter around the entire intersection, yellow caution tape stretched between the traffic light pole and a cone, no civilians inside the perimeter, a small cluster of four or five onlookers visible at the very far edge of the frame beyond the tape watching from a safe distance, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "video_prompt": "CCTV surveillance footage, the firefighters reach their position and the hose activates sending a powerful stream of water onto the burning sedan creating a burst of white steam, the flames begin to diminish under the water stream, meanwhile an ambulance with flashing lights enters the frame from the east and parks behind the police cruiser, paramedics exit and set up a gurney at the rear, the police officer strings yellow caution tape to establish a perimeter, a few distant onlookers appear at the far edge of the frame behind the tape, the scene shifts from emergency to controlled response, fixed camera, no camera movement."
+  },
+  {
+    "clip": 8,
+    "title": "Scene Controlled",
+    "start_time": "1:45",
+    "end_time": "2:00",
+    "start_image": "The same wet intersection from the same overhead security camera, water stream actively hitting the sedan producing white steam, flames partially suppressed, two firefighters holding the hose, fire engine on the north road, ambulance behind the police cruiser on the east road with paramedics and gurney ready, yellow caution tape perimeter with orange cones, a few distant onlookers beyond the tape, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "end_image": "The same wet intersection from the same overhead security camera, the sedan now a dark smoldering wreck with no visible flames just thin grey-white smoke and residual steam rising from the blackened shell, the truck fire also extinguished with its cargo box charred and torn open but no longer burning, the wet asphalt around both vehicles now covered in a sheen of water mixed with dark soot and foam, two firefighters standing near the sedan with the hose at low flow doing final overhaul, a third firefighter inspecting the truck's ruptured cargo box and the scorched HAZMAT placard, the fire engine still positioned with lights flashing, the ambulance with paramedics standing by with the gurney still ready, the police cruiser with a second police vehicle now arrived and parked on the north-south road, a full perimeter of orange cones and yellow caution tape around the intersection, six or seven onlookers watching from beyond the tape at a distance, the scene fully controlled and stable, the dusk sky now slightly darker than the earlier frames, flat surveillance camera quality, photorealistic, wide-angle 18mm lens.",
+    "video_prompt": "CCTV surveillance footage, the water stream continues and the sedan's flames die out leaving a smoldering blackened shell with steam rising, the firefighters adjust the hose to low flow and begin inspecting the wreckage, one firefighter walks to the truck's cargo box and examines the damage, a second police vehicle arrives and parks on the north-south road, the paramedics stand by watching, more onlookers gather beyond the yellow tape perimeter at the edges of the frame, the scene settles from active emergency into a controlled and stable aftermath, the sky grows slightly darker, fixed camera, no camera movement."
+  }
+]

@@ -177,7 +177,7 @@ export function CCTVPanel({
                backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px)` 
              }} />
         
-        {!isActive ? (
+        {(!isActive && !audioInitialized) ? (
           <div className="dark:text-white/20 text-black/20 font-mono text-xs uppercase tracking-widest text-center">
             Signal Lost<br/>or Standby
           </div>

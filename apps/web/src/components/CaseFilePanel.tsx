@@ -58,7 +58,7 @@ export function CaseFilePanel({ state }: { state: IncidentState | null }) {
             {state.injury_flags.map((i, idx) => (
               <span 
                 key={i} 
-                className="bg-amber-500/20 border border-amber-500/50 text-amber-500 font-bold tracking-widest text-[9px] font-mono uppercase px-2 py-0.5 rounded-sm animate-in fade-in zoom-in-75 duration-300 fill-mode-both"
+                className="bg-red-500 text-black font-bold tracking-widest text-[9px] font-mono uppercase px-2 py-0.5 rounded-sm animate-in fade-in zoom-in-75 duration-300 fill-mode-both shadow-[0_0_10px_rgba(239,68,68,0.3)]"
                 style={{ animationDelay: `${(state.hazard_flags.length + idx) * 150}ms` }}
               >
                 {i.replace(/_/g, ' ')}

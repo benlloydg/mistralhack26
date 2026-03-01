@@ -174,8 +174,13 @@ export function ResponseLanes({
                       {isDone ? (
                         <>✓ SENT</>
                       ) : isPlaying ? (
-                        <span className="flex items-center gap-1 text-amber-500 animate-[pulse_1.5s_ease-in-out_infinite]">
-                          <Volume2 className="w-3 h-3" /> PLAYING
+                        <span className="flex items-center gap-1.5 text-amber-500 font-bold">
+                          <div className="flex items-center gap-[2px] h-3 mr-1">
+                             <div className="w-1 h-full bg-amber-500 animate-[pulse_0.8s_ease-in-out_infinite]"></div>
+                             <div className="w-1 h-1/2 bg-amber-500 animate-[pulse_1.2s_ease-in-out_infinite_0.2s]"></div>
+                             <div className="w-1 h-3/4 bg-amber-500 animate-[pulse_1.0s_ease-in-out_infinite_0.4s]"></div>
+                          </div>
+                          PLAYING
                         </span>
                       ) : (
                         <span className="opacity-50 flex items-center gap-1"><Play className="w-3 h-3" fill="currentColor" /> READY</span>

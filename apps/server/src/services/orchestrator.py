@@ -346,6 +346,12 @@ class DemoOrchestrator:
         # Frame 1
         try:
             frame_bytes_1 = await extract_frame(video_path, timestamp_s=VISION_FRAME_1_S)
+            # Save frame to disk for after-action report
+            frames_dir = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "frames")
+            os.makedirs(frames_dir, exist_ok=True)
+            frame_path_1 = os.path.join(frames_dir, f"{self.deps.case_id}_t{int(VISION_FRAME_1_S)}s.jpg")
+            with open(frame_path_1, "wb") as f:
+                f.write(frame_bytes_1)
             analysis_1 = await analyze_frame(self.deps.mistral_client, frame_bytes_1, frame_id=1)
             self.state.log("vision", "detection",
                            f"Frame 1 analysis: {analysis_1.overall_description}",
@@ -370,6 +376,10 @@ class DemoOrchestrator:
         # Frame 2
         try:
             frame_bytes_2 = await extract_frame(video_path, timestamp_s=VISION_FRAME_2_S)
+            # Save frame to disk for after-action report
+            frame_path_2 = os.path.join(frames_dir, f"{self.deps.case_id}_t{int(VISION_FRAME_2_S)}s.jpg")
+            with open(frame_path_2, "wb") as f:
+                f.write(frame_bytes_2)
             analysis_2 = await analyze_frame(self.deps.mistral_client, frame_bytes_2, frame_id=2)
             delta = compute_scene_delta(analysis_1, analysis_2)
 

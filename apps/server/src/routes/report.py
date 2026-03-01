@@ -1,14 +1,46 @@
 """
-Report endpoint — serves a self-contained HTML case report at /report/{case_id}.
-
-Judges can open this URL on their own laptops to examine the full audit trail:
-timeline, transcripts, vision detections, dispatches, and action plan.
+Report endpoints:
+- POST /api/v1/cases/{case_id}/report — generate (or return cached) JSON report
+- GET  /api/v1/cases/{case_id}/report — return cached report or 404
+- GET  /report/{case_id}              — legacy HTML report for judges
 """
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
-from ..deps import get_supabase
+from ..deps import get_supabase, get_mistral
+from ..services.report_builder import ReportBuilder
 
 router = APIRouter(tags=["report"])
+
+
+# ----------------------------------------------------------------
+# JSON Report API (new — serves as contract for frontend team)
+# ----------------------------------------------------------------
+
+@router.post("/api/v1/cases/{case_id}/report")
+async def generate_report(case_id: str) -> dict:
+    """Generate (or return cached) the full after-action report."""
+    builder = ReportBuilder(get_supabase(), get_mistral())
+    report = await builder.build(case_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail=f"Case not found: {case_id}")
+    return report.model_dump()
+
+
+@router.get("/api/v1/cases/{case_id}/report")
+async def get_report(case_id: str) -> dict:
+    """Return cached report if it exists, 404 otherwise."""
+    report = ReportBuilder.get_cached(case_id)
+    if report is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Report not yet generated for case: {case_id}. Use POST to generate.",
+        )
+    return report.model_dump()
+
+
+# ----------------------------------------------------------------
+# Legacy HTML report (preserved for judge artifacts)
+# ----------------------------------------------------------------
 
 
 def _severity_color(severity: str) -> str:

@@ -7,7 +7,6 @@ import { AgentTerminal } from "./AgentTerminal";
 import { CCTVPanel } from "./CCTVPanel";
 import { TranscriptPanel } from "./TranscriptPanel";
 import { ResponseLanes } from "./ResponseLanes";
-import { ActionButton } from "./ActionButton";
 import { useIncidentState } from "@/hooks/useIncidentState";
 import { useAgentLogs } from "@/hooks/useAgentLogs";
 import { useTranscripts } from "@/hooks/useTranscripts";
@@ -191,28 +190,12 @@ export function Dashboard() {
         <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
           <div className="flex-1 min-h-0">
             {/* Pass transcripts down to ResponseLanes to render outbound broadcasts */}
-            <ResponseLanes dispatches={dispatches} transcripts={transcripts} />
-          </div>
-          <div className="shrink-0">
-            {incidentState === null ? (
-              <ActionButton 
-                onStart={handleStartDemo} 
-                onApprove={handleApprove} 
-                status="none"
-                isStarting={isStarting}
-                isApproving={isApproving}
-              />
-            ) : (
-              <ActionButton 
-                onStart={handleStartDemo} 
-                onApprove={handleApprove} 
-                status={incidentState.status || 'intake'}
-                isStarting={isStarting}
-                isApproving={isApproving}
-                recommendedCount={incidentState.recommended_units?.length || 0}
-                confirmedCount={incidentState.confirmed_units?.length || 0}
-              />
-            )}
+            <ResponseLanes 
+               dispatches={dispatches} 
+               transcripts={transcripts}
+               recommendedUnits={incidentState?.recommended_units || []}
+               onFirstExecute={handleApprove}
+            />
           </div>
         </div>
 

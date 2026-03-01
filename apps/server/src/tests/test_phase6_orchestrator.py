@@ -81,6 +81,9 @@ class TestFastAPIServer:
             assert "/api/v1/demo/start" in routes
             assert "/api/v1/demo/approve" in routes
             assert "/api/v1/demo/status" in routes
+            assert "/api/v1/demo/reset" in routes
+            assert "/api/v1/demo/cases" in routes
+            assert "/api/v1/demo/cases/{case_id}" in routes
             print(f"  Routes: {routes}")
 
         timer.summary()

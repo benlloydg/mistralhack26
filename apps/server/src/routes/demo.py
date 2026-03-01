@@ -1,28 +1,46 @@
+import os
+import shutil
+import time
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, BackgroundTasks
 from ..services.orchestrator import DemoOrchestrator
 from ..services.state import StateManager
+from ..services.tts import GENERATED_AUDIO_DIR
 from ..agents.shared_deps import TriageNetDeps
 from ..deps import get_supabase, get_mistral
 from ..config import settings
-import time
 
 router = APIRouter(prefix="/demo", tags=["demo"])
 
-# Module-level reference to the active orchestrator
+# Module-level reference to active demo
 _active_orchestrator: DemoOrchestrator | None = None
+_active_case_id: str | None = None
+
+
+def _generate_case_id() -> str:
+    """Generate a unique case ID: TN-YYYYMMDD-HHMMSS."""
+    now = datetime.now(timezone.utc)
+    return f"TN-{now.strftime('%Y%m%d')}-{now.strftime('%H%M%S')}"
 
 
 @router.post("/start")
 async def start_demo(background_tasks: BackgroundTasks):
-    """Initialize and start the 120-second demo."""
-    global _active_orchestrator
-    case_id = "TN-2026-00417"
+    """Create a new case and start the 120-second demo. Previous runs are preserved."""
+    global _active_orchestrator, _active_case_id
     supabase = get_supabase()
     mistral = get_mistral()
     start_time = time.time()
 
-    # Create incident_state row
-    supabase.table("incident_state").upsert({
+    case_id = _generate_case_id()
+    _active_case_id = case_id
+
+    # Clean generated audio from previous run (audio files are ephemeral)
+    if os.path.exists(GENERATED_AUDIO_DIR):
+        shutil.rmtree(GENERATED_AUDIO_DIR)
+
+    # Create new incident_state row — previous runs stay in the DB
+    supabase.table("incident_state").insert({
         "case_id": case_id,
         "status": "intake",
         "severity": "unknown",
@@ -57,20 +75,69 @@ async def start_demo(background_tasks: BackgroundTasks):
 @router.post("/approve")
 async def approve_response():
     """Operator approves initial response. Unblocks Phase 2 in orchestrator."""
-    global _active_orchestrator
     if _active_orchestrator:
         _active_orchestrator.approve()
-        return {"status": "approved"}
+        return {"status": "approved", "case_id": _active_case_id}
     return {"status": "no_active_demo"}
 
 
 @router.get("/status")
 async def demo_status():
-    """Get current demo state."""
+    """Get current active demo state."""
+    if not _active_case_id:
+        return {"status": "no_active_demo"}
     supabase = get_supabase()
     try:
         result = supabase.table("incident_state") \
-            .select("*").eq("case_id", "TN-2026-00417").single().execute()
+            .select("*").eq("case_id", _active_case_id).single().execute()
         return result.data
     except Exception:
         return {"status": "no_demo_found"}
+
+
+@router.get("/cases")
+async def list_cases():
+    """List all past demo runs, newest first."""
+    supabase = get_supabase()
+    result = supabase.table("incident_state") \
+        .select("case_id, status, severity, created_at, updated_at") \
+        .order("created_at", desc=True) \
+        .execute()
+    return {"cases": result.data, "active_case_id": _active_case_id}
+
+
+@router.get("/cases/{case_id}")
+async def get_case_report(case_id: str):
+    """Full case report — incident state, logs, transcripts, dispatches."""
+    supabase = get_supabase()
+    state = supabase.table("incident_state") \
+        .select("*").eq("case_id", case_id).single().execute()
+    logs = supabase.table("agent_logs") \
+        .select("*").eq("case_id", case_id) \
+        .order("created_at").execute()
+    transcripts = supabase.table("transcripts") \
+        .select("*").eq("case_id", case_id) \
+        .order("created_at").execute()
+    dispatches = supabase.table("dispatches") \
+        .select("*").eq("case_id", case_id) \
+        .order("created_at").execute()
+    return {
+        "case_id": case_id,
+        "incident_state": state.data,
+        "agent_logs": logs.data,
+        "transcripts": transcripts.data,
+        "dispatches": dispatches.data,
+    }
+
+
+@router.post("/reset")
+async def reset_demo():
+    """Stop any active demo. Does NOT delete historical runs."""
+    global _active_orchestrator, _active_case_id
+    _active_orchestrator = None
+    old_case_id = _active_case_id
+    _active_case_id = None
+    # Clean generated audio (ephemeral)
+    if os.path.exists(GENERATED_AUDIO_DIR):
+        shutil.rmtree(GENERATED_AUDIO_DIR)
+    return {"status": "reset", "previous_case_id": old_case_id}

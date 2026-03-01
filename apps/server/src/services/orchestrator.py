@@ -19,7 +19,7 @@ from ..agents.case_match_agent import evidence_fusion_agent
 from ..agents.vision_agent import analyze_frame, compute_scene_delta
 from ..services.state import StateManager
 from ..services.transcription import transcribe_audio
-from ..services.tts import generate_speech
+from ..services.tts import generate_and_save
 from ..services.media import extract_frame
 from ..models.incident import Severity, IncidentStatus
 from ..models.caller import CallerRecord
@@ -138,9 +138,28 @@ class DemoOrchestrator:
                        color="amber", flash=True)
         self.state.log("triage", "action_plan", "Action Plan v1 generated", color="blue")
 
-        # 5. Generate voice response to caller
+        # 5. Generate voice response to caller in their language
+        response_text_es = (
+            "Ayuda está en camino. Manténgase en la línea. "
+            "No mueva a su esposo. Los paramédicos están llegando."
+        )
+        audio_url = await generate_and_save(
+            response_text_es, caller.language, "response_caller1.mp3"
+        )
+        self.deps.supabase.table("transcripts").insert({
+            "case_id": self.deps.case_id,
+            "caller_id": "dispatch",
+            "caller_label": "DISPATCH",
+            "language": caller.language,
+            "original_text": response_text_es,
+            "translated_text": "Help is on the way. Stay on the line. "
+                               "Don't move your husband. Paramedics are arriving.",
+            "confidence": 1.0,
+            "segment_index": 1,
+        }).execute()
         self.state.log("voice", "response_sent",
                        f"Voice response sent to {caller.label} ({caller.language.upper()})",
+                       data={"audio_url": audio_url},
                        color="green")
 
     async def _phase_2_approval(self):
@@ -168,6 +187,11 @@ class DemoOrchestrator:
                 deps=self.deps,
             )
             brief = dispatch_result.output
+            # Generate TTS for dispatch brief
+            safe_unit = unit.replace(" ", "_").lower()
+            audio_url = await generate_and_save(
+                brief.voice_message, "en", f"dispatch_{safe_unit}.mp3"
+            )
             self.deps.supabase.table("dispatches").insert({
                 "case_id": self.deps.case_id,
                 "unit_type": unit,
@@ -180,6 +204,7 @@ class DemoOrchestrator:
             }).execute()
             self.state.log("dispatch", "unit_dispatched",
                            f"{unit} dispatched: {brief.unit_assigned} -> {brief.destination}",
+                           data={"audio_url": audio_url},
                            color="green")
 
     async def _phase_3_caller_2(self):
@@ -316,10 +341,37 @@ class DemoOrchestrator:
                        "PRIORITY INTERRUPT — Hazard warning to all callers",
                        color="red", flash=True)
 
-        # Generate TTS warnings in each active language
-        for lang_code in ["es", "zh"]:
+        # Generate TTS evacuation warnings in each active caller language
+        warnings = {
+            "es": (
+                "¡Atención! Se ha detectado fuego en el motor. "
+                "Aléjense del vehículo inmediatamente. Los bomberos están en camino.",
+                "Attention! Engine fire detected. "
+                "Move away from the vehicle immediately. Fire department is en route."
+            ),
+            "zh": (
+                "注意！已检测到发动机起火。请立即远离车辆。消防队正在赶来。",
+                "Attention! Engine fire detected. "
+                "Move away from the vehicle immediately. Fire department is en route."
+            ),
+        }
+        for lang_code, (warning_text, translation) in warnings.items():
+            audio_url = await generate_and_save(
+                warning_text, lang_code, f"warning_{lang_code}.mp3"
+            )
+            self.deps.supabase.table("transcripts").insert({
+                "case_id": self.deps.case_id,
+                "caller_id": "dispatch",
+                "caller_label": "DISPATCH",
+                "language": lang_code,
+                "original_text": warning_text,
+                "translated_text": translation,
+                "confidence": 1.0,
+                "segment_index": 10,
+            }).execute()
             self.state.log("voice", "warning_sent",
                            f"Evacuation warning sent ({lang_code.upper()})",
+                           data={"audio_url": audio_url},
                            color="red")
 
         # Dispatch fire response
@@ -329,6 +381,9 @@ class DemoOrchestrator:
             deps=self.deps,
         )
         brief = dispatch_result.output
+        audio_url = await generate_and_save(
+            brief.voice_message, "en", "dispatch_fire_response.mp3"
+        )
         self.deps.supabase.table("dispatches").insert({
             "case_id": self.deps.case_id,
             "unit_type": "Fire Response",
@@ -338,9 +393,11 @@ class DemoOrchestrator:
             "status": "dispatched",
             "voice_message": brief.voice_message,
             "rationale": "Vision-confirmed engine fire",
+            "audio_url": audio_url,
         }).execute()
         self.state.log("dispatch", "unit_dispatched",
                        f"Fire Response dispatched: {brief.unit_assigned}",
+                       data={"audio_url": audio_url},
                        color="red", flash=True)
 
     async def _phase_6_summary(self):

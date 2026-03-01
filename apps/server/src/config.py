@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     # Mistral
     mistral_api_key: str
     mistral_triage_model: str = "mistral-large-latest"
-    mistral_vision_model: str = "mistral-small-latest"  # vision-capable
+    mistral_vision_model: str = "pixtral-large-latest"  # Mistral's vision model
 
     # ElevenLabs
     elevenlabs_api_key: str

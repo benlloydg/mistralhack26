@@ -1,0 +1,119 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.2, pluggy-1.6.0 -- /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server
+configfile: pyproject.toml
+plugins: anyio-4.12.1, logfire-4.25.0, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=session
+collecting ... collected 1 item
+
+src/tests/test_vision_real.py::TestVisionRealVideo::test_extract_and_analyze_frames 
+=== VISION PIPELINE TEST — REAL CRASH VIDEO ===
+Video: crash_01.mp4 (18,494,230 bytes)
+Model: pixtral-large-latest
+Timestamps: [0, 3, 5, 7, 10, 13]
+
+  Size: 179,684 bytes
+[0.233s] Extract frame 1 (t=0s)
+  Description: Nighttime intersection with light traffic and pedestrians
+  Smoke: False
+  Fire: False
+  Damage: none
+    Detection: persons_visible (confidence=0.9)
+    Detection: debris (confidence=0.1)
+[2.922s] Pixtral analyze frame 1 (t=0s)
+
+  Size: 163,245 bytes
+[0.263s] Extract frame 2 (t=3s)
+  Description: Intersection with a possible collision involving a truck and a car, pedestrians nearby.
+  Smoke: False
+  Fire: False
+  Damage: moderate
+    Detection: persons_visible (confidence=0.9)
+    Detection: vehicle_collision (confidence=0.8)
+[2.861s] Pixtral analyze frame 2 (t=3s)
+  Delta: Scene delta: Nighttime intersection with light traffic and pedestrians → Intersection with a possible collision involving a truck and a car, pedestrians nearby.
+
+  Size: 146,679 bytes
+[0.303s] Extract frame 3 (t=5s)
+  Description: Vehicle collision at intersection with smoke and possible engine fire.
+  Smoke: True
+  Fire: True
+  Damage: severe
+    Detection: vehicle_collision (confidence=0.95)
+    Detection: smoke (confidence=0.9)
+    Detection: engine_fire (confidence=0.8)
+    Detection: debris (confidence=0.7)
+    Detection: persons_visible (confidence=0.6)
+[4.088s] Pixtral analyze frame 3 (t=5s)
+  ** ESCALATION: engine_fire **
+  Delta: Scene delta: Intersection with a possible collision involving a truck and a car, pedestrians nearby. → Vehicle collision at intersection with smoke and possible engine fire.
+
+  Size: 151,712 bytes
+[0.351s] Extract frame 4 (t=7s)
+  Description: Severe vehicle collision with engine fire, smoke, and debris at intersection.
+  Smoke: True
+  Fire: True
+  Damage: severe
+    Detection: vehicle_collision (confidence=0.99)
+    Detection: engine_fire (confidence=0.99)
+    Detection: smoke (confidence=0.95)
+    Detection: debris (confidence=0.85)
+    Detection: persons_visible (confidence=0.7)
+[3.808s] Pixtral analyze frame 4 (t=7s)
+  Delta: Scene delta: Vehicle collision at intersection with smoke and possible engine fire. → Severe vehicle collision with engine fire, smoke, and debris at intersection.
+
+  Size: 163,509 bytes
+[0.431s] Extract frame 5 (t=10s)
+  Description: A truck and a car are engulfed in flames at an intersection, with heavy smoke and debris scattered across the road.
+  Smoke: True
+  Fire: True
+  Damage: severe
+    Detection: vehicle_collision (confidence=0.99)
+    Detection: engine_fire (confidence=0.95)
+    Detection: smoke (confidence=0.9)
+    Detection: debris (confidence=0.85)
+    Detection: persons_visible (confidence=0.7)
+[3.835s] Pixtral analyze frame 5 (t=10s)
+  Delta: Scene delta: Severe vehicle collision with engine fire, smoke, and debris at intersection. → A truck and a car are engulfed in flames at an intersection, with heavy smoke and debris scattered across the road.
+
+  Size: 159,183 bytes
+[0.489s] Extract frame 6 (t=13s)
+  Description: Severe collision involving a truck and multiple vehicles, with active engine fire and smoke.
+  Smoke: True
+  Fire: True
+  Damage: severe
+    Detection: vehicle_collision (confidence=0.99)
+    Detection: engine_fire (confidence=0.95)
+    Detection: smoke (confidence=0.9)
+    Detection: debris (confidence=0.85)
+    Detection: persons_visible (confidence=0.1)
+[3.752s] Pixtral analyze frame 6 (t=13s)
+  Delta: Scene delta: A truck and a car are engulfed in flames at an intersection, with heavy smoke and debris scattered across the road. → Severe collision involving a truck and multiple vehicles, with active engine fire and smoke.
+
+=== ALL DESCRIPTIONS ===
+  t=0s: Nighttime intersection with light traffic and pedestrians
+  t=3s: Intersection with a possible collision involving a truck and a car, pedestrians nearby.
+  t=5s: Vehicle collision at intersection with smoke and possible engine fire.
+  t=7s: Severe vehicle collision with engine fire, smoke, and debris at intersection.
+  t=10s: A truck and a car are engulfed in flames at an intersection, with heavy smoke and debris scattered across the road.
+  t=13s: Severe collision involving a truck and multiple vehicles, with active engine fire and smoke.
+
+============================================================
+TOTAL ELAPSED: [24.926s]
+  [0.233s] Extract frame 1 (t=0s)
+  [2.922s] Pixtral analyze frame 1 (t=0s)
+  [0.263s] Extract frame 2 (t=3s)
+  [2.861s] Pixtral analyze frame 2 (t=3s)
+  [0.303s] Extract frame 3 (t=5s)
+  [4.088s] Pixtral analyze frame 3 (t=5s)
+  [0.351s] Extract frame 4 (t=7s)
+  [3.808s] Pixtral analyze frame 4 (t=7s)
+  [0.431s] Extract frame 5 (t=10s)
+  [3.835s] Pixtral analyze frame 5 (t=10s)
+  [0.489s] Extract frame 6 (t=13s)
+  [3.752s] Pixtral analyze frame 6 (t=13s)
+============================================================
+PASSED
+
+============================== 1 passed in 25.05s ==============================

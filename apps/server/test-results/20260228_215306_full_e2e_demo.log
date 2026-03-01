@@ -1,0 +1,41 @@
+Traceback (most recent call last):
+  File "<string>", line 50, in run_full_demo
+  File "/Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/src/services/orchestrator.py", line 65, in start
+    await self._phase_4_vision()
+  File "/Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/src/services/orchestrator.py", line 295, in _phase_4_vision
+    analysis_2 = await analyze_frame(self.deps.mistral_client, frame_bytes_2, frame_id=2)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/src/agents/vision_agent.py", line 45, in analyze_frame
+    response = mistral_client.chat.complete(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/.venv/lib/python3.12/site-packages/mistralai/chat.py", line 273, in complete
+    raise models.SDKError("API error occurred", http_res, http_res_text)
+mistralai.models.sdkerror.SDKError: API error occurred: Status 400. Body: {"object":"error","message":"Image, 'data:image/jpeg;base64,', could not be loaded as a valid image. Allowed formats are JPEG, PNG, WEBP, GIF, MPO, HEIF, AVIF, BMP, TIFF","type":"invalid_request_file","param":null,"code":"3310"}
+=== FULL E2E DEMO RUN ===
+Case ID: TN-20260301-055308
+[0.4s] State created
+[0.4s] Starting orchestrator...
+[4.8s] Auto-approved
+[83.4s] FAILED at: API error occurred: Status 400. Body: {"object":"error","message":"Image, 'data:image/jpeg;base64,', could not be loaded as a valid image. Allowed formats are JPEG, PNG, WEBP, GIF, MPO, HEIF, AVIF, BMP, TIFF","type":"invalid_request_file","param":null,"code":"3310"}
+
+=== FINAL STATE ===
+  Status: critical
+  Severity: critical
+  Callers: 2
+  People: 3
+  Hazards: []
+  Injuries: ['pediatric_involvement', 'trapped_person', 'unspecified_injuries']
+  Confirmed units: ['EMS', 'Fire Response', 'Police', 'Traffic Control']
+  Vision: 0 detections
+  Action Plan: v2
+  Summary: None
+
+  Agent logs: 22 entries
+  Transcripts: 3 entries
+  Dispatches: 4 entries
+
+  Report URL: http://localhost:8000/report/TN-20260301-055308
+
+============================================================
+TOTAL ELAPSED: [83.7s]
+============================================================

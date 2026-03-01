@@ -1,0 +1,82 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.2, pluggy-1.6.0 -- /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server
+configfile: pyproject.toml
+plugins: anyio-4.12.1, logfire-4.25.0, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=session
+collecting ... collected 5 items
+
+src/tests/test_phase5_agents.py::TestIntakeAgent::test_intake_extracts_facts [2.040s] intake_agent.run() — Spanish caller
+  Location: Market y la Quinta
+  Type: vehicle_crash
+  Trapped: True
+  Child: False
+  Hazards: humo saliendo del motor
+  Keywords: ['atrapado', 'humo']
+[0.000s] Validate IntakeFacts
+
+============================================================
+TOTAL ELAPSED: [2.136s]
+  [2.040s] intake_agent.run() — Spanish caller
+  [0.000s] Validate IntakeFacts
+============================================================
+PASSED
+src/tests/test_phase5_agents.py::TestDispatchAgent::test_dispatch_generates_brief [3.146s] dispatch_agent.run() — EMS dispatch
+  Unit: AMB-7
+  ETA: 5 min
+  Voice: AMB-7 responding to high-severity vehicle collision at Market and 5th, San Francisco. Two injured, one trapped. Smoke reported. ETA 5 minutes.
+  Rationale: AMB-7 is the closest advanced life support unit to the scene. The high severity, presence of injuries, and entrapment necessitate immediate medical intervention. Smoke indicates potential fire risk, requiring urgent assessment and stabilization.
+[0.000s] Validate DispatchBrief
+
+============================================================
+TOTAL ELAPSED: [3.243s]
+  [3.146s] dispatch_agent.run() — EMS dispatch
+  [0.000s] Validate DispatchBrief
+============================================================
+PASSED
+src/tests/test_phase5_agents.py::TestEvidenceFusionAgent::test_evidence_fusion [12.420s] evidence_fusion_agent.run() — multi-source
+  Corroborations: 3
+  Severity delta: HIGH -> CRITICAL
+  Evacuation: True
+  Reasoning: 1. **Corroborated Claims**: 
+   - **Vehicle collision**: Confirmed by two independent callers and vision detection (combined confidence: 99.9%).
+   - **Smoke visible**: Confirmed by both callers and vision detection (combined confidence: 99.8%).
+   - **Persons trapped/in distress**: Caller 1 reports a trapped husband, Caller 2 reports a crying child, and vision detects 3 persons visible (combined confidence: 99.5%).
+
+2. **Severity Escalation**: 
+   - The current severity is **HIGH** due to smoke and trapped persons. 
+   - The presence of **smoke (fire risk) + trapped individuals + multiple distressed persons** warrants an escalation to **CRITICAL**, as the situation poses an immediate threat to life and safety.
+
+3. **Evacuation Warning**: 
+   - Smoke from the engine indicates a potential fire or explosion risk. 
+   - Trapped and distressed individuals (including a child) are unable to evacuate independently. 
+   - The combined evidence confirms an active threat to people near the scene, necessitating an **evacuation warning**.
+[0.000s] Validate EvidenceFusionResult
+
+============================================================
+TOTAL ELAPSED: [12.515s]
+  [12.420s] evidence_fusion_agent.run() — multi-source
+  [0.000s] Validate EvidenceFusionResult
+============================================================
+PASSED
+src/tests/test_phase5_agents.py::TestVisionAgent::test_compute_scene_delta_new_fire [0.000s] Build test FrameAnalysis objects
+  Delta: {'new_hazard': 'engine_fire', 'hazard_escalation': True, 'description': 'Scene delta: Traffic scene with damaged vehicle → Traffic scene with vehicle on fire'}
+[0.000s] compute_scene_delta()
+
+============================================================
+TOTAL ELAPSED: [0.000s]
+  [0.000s] Build test FrameAnalysis objects
+  [0.000s] compute_scene_delta()
+============================================================
+PASSED
+src/tests/test_phase5_agents.py::TestVisionAgent::test_compute_scene_delta_no_previous   Delta: {'new_hazard': None, 'hazard_escalation': False}
+[0.000s] compute_scene_delta(None, curr)
+
+============================================================
+TOTAL ELAPSED: [0.000s]
+  [0.000s] compute_scene_delta(None, curr)
+============================================================
+PASSED
+
+============================== 5 passed in 19.47s ==============================

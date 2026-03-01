@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-9.0.2, pluggy-1.6.0 -- /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server
+configfile: pyproject.toml
+plugins: anyio-4.12.1, logfire-4.25.0, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=session
+collecting ... collected 1 item
+
+src/tests/test_phase4_elevenlabs.py::TestElevenLabsTTS::test_tts_generates_audio_bytes [0.524s] ElevenLabs TTS generate_speech()
+  Audio size: 73186 bytes
+[0.000s] Validate audio bytes
+
+============================================================
+TOTAL ELAPSED: [0.525s]
+  [0.524s] ElevenLabs TTS generate_speech()
+  [0.000s] Validate audio bytes
+============================================================
+PASSED
+
+============================== 1 passed in 0.63s ===============================

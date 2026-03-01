@@ -193,7 +193,7 @@ class DemoOrchestrator:
         """
         self._transcript_count += 1
         text = data["text"]
-        language = data["language_code"]
+        language = data["language_code"] or "unknown"
         feed_id = data["feed_id"]
         segment_index = data["segment_index"]
 

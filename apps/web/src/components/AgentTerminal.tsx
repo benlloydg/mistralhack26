@@ -35,18 +35,29 @@ export function AgentTerminal({ logs }: { logs: AgentLog[] }) {
   };
 
   const getModelName = (agent: string) => {
-    switch (agent.toLowerCase()) {
-      case 'triageagent': 
-      case 'evidencefusion': 
-      case 'casematchagent':
-        return 'mistral-lg';
-      case 'visionagent': 
-        return 'pixtral-12b';
-      case 'voiceagent': 
-      case 'prioritybroadcast':
-        return '11labs-scribe';
+    switch (agent.toUpperCase()) {
+      case 'TRIAGE':
+      case 'TRIAGEAGENT': 
+      case 'FUSION':
+      case 'EVIDENCEFUSION': 
+      case 'CASEMATCH':
+      case 'CASEMATCHAGENT':
+      case 'DISPATCH':
+      case 'DISPATCHAGENT':
+        return 'Mistral Large';
+      case 'VISION':
+      case 'VISIONAGENT': 
+        return 'Pixtral 12B';
+      case 'AUDIO':
+      case 'VOICE':
+      case 'VOICEAGENT': 
+      case 'PRIORITYBROADCAST':
+        return '11Labs Scribe';
+      case 'SYSTEM':
+      case 'OPERATOR':
+        return 'System Core';
       default: 
-        return 'core';
+        return 'Mistral Large';
     }
   };
 

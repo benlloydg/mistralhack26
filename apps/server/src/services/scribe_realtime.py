@@ -102,11 +102,12 @@ class ScribeRealtimeService:
         self._loop = asyncio.get_running_loop()
 
         # Register event handlers — SDK calls these synchronously,
-        # so async handlers need sync wrappers that schedule coroutines
+        # so async handlers need sync wrappers that schedule coroutines.
+        # NOTE: Only listen to COMMITTED_TRANSCRIPT_WITH_TIMESTAMPS (not plain
+        # COMMITTED_TRANSCRIPT) to avoid processing the same transcript twice.
         self._connection.on(RealtimeEvents.SESSION_STARTED, self._handle_session_started)
         self._connection.on(RealtimeEvents.PARTIAL_TRANSCRIPT, self._wrap_async(self._handle_partial))
-        self._connection.on(RealtimeEvents.COMMITTED_TRANSCRIPT, self._wrap_async(self._handle_committed))
-        self._connection.on(RealtimeEvents.COMMITTED_TRANSCRIPT_WITH_TIMESTAMPS, self._wrap_async(self._handle_committed_timestamps))
+        self._connection.on(RealtimeEvents.COMMITTED_TRANSCRIPT_WITH_TIMESTAMPS, self._wrap_async(self._handle_committed))
         self._connection.on(RealtimeEvents.ERROR, self._handle_error)
         self._connection.on(RealtimeEvents.CLOSE, self._handle_close)
 
@@ -139,10 +140,10 @@ class ScribeRealtimeService:
         self._transcript_count += 1
         if isinstance(data, dict):
             text = data.get("text", "")
-            language = data.get("language_code", data.get("language", "unknown"))
+            language = data.get("language_code") or data.get("language") or "unknown"
         else:
             text = getattr(data, "text", "")
-            language = getattr(data, "language_code", getattr(data, "language", "unknown"))
+            language = getattr(data, "language_code", None) or getattr(data, "language", None) or "unknown"
 
         feed_id = self.feed_registry.get_feed_id(language)
         print(f"[SCRIBE] *** COMMITTED #{self._transcript_count} [{feed_id}] ({language}): {text[:100]}")
@@ -156,11 +157,6 @@ class ScribeRealtimeService:
                 "segment_index": self._transcript_count,
                 "timestamp": time.time(),
             })
-
-    async def _handle_committed_timestamps(self, data):
-        """Committed transcript with word timestamps — delegate to committed handler."""
-        print(f"[SCRIBE] COMMITTED_WITH_TIMESTAMPS event received")
-        await self._handle_committed(data)
 
     def _handle_error(self, data):
         print(f"[SCRIBE] ERROR: {data}")

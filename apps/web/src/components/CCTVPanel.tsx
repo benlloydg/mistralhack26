@@ -54,37 +54,35 @@ export function CCTVPanel({ state, isBroadcasting = false }: { state: IncidentSt
             Signal Lost<br/>or Standby
           </div>
         ) : (
-          <div className="absolute bottom-4 left-0 right-0 w-full flex flex-col items-center justify-end pointer-events-none z-20">
-             {/* General Image Description Overlay */}
-             <div className="w-full px-24 flex flex-col items-center gap-1.5">
-               
-               {/* Detections Row */}
-               <div className="flex gap-1.5 flex-wrap justify-center">
-                 {currentScene.detections.map((det) => {
-                   const isHazard = det.label === 'fire' || det.label === 'smoke';
-                   const bgClass = isHazard ? 'bg-red-500/20' : 'bg-black/60';
-                   const borderClass = isHazard ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'border-white/20';
-                   const textClass = isHazard ? 'text-red-500' : 'text-white/80';
-                   
-                   return (
-                     <div key={det.label} className={`backdrop-blur-md px-2 py-0.5 rounded-sm border ${borderClass} ${bgClass} transition-all duration-300`}>
-                       <span className={`font-mono text-[9px] font-bold tracking-widest uppercase ${textClass}`}>
-                         {det.label} · {Math.round(det.conf * 100)}%
-                       </span>
-                     </div>
-                   );
-                 })}
-               </div>
-
-               {/* Description Box */}
-               <div className="backdrop-blur-md px-3 py-1.5 rounded-sm border border-white/20 bg-black/60 w-full text-center transition-all duration-500 max-w-lg">
+          <>
+            {/* Description Box */}
+            <div className="absolute bottom-4 left-0 right-0 w-full flex justify-center pointer-events-none z-20">
+               <div className="backdrop-blur-md px-3 py-1.5 rounded-sm border border-white/20 bg-black/60 text-center transition-all duration-500 max-w-lg">
                   <span className="font-mono text-[10px] uppercase tracking-widest text-white/90">
                     {currentScene.desc}
                   </span>
                </div>
-               
-             </div>
-          </div>
+            </div>
+
+            {/* Detections Stack (Bottom Left) */}
+            <div className="absolute bottom-16 left-4 flex flex-col items-start gap-1 pointer-events-none z-20">
+               {currentScene.detections.map((det) => {
+                 const isHazard = det.label === 'fire' || det.label === 'smoke';
+                 const bgClass = isHazard ? 'bg-red-500/20' : 'bg-black/60';
+                 const borderClass = isHazard ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'border-white/20';
+                 const textClass = isHazard ? 'text-red-500' : 'text-white/80';
+                 
+                 return (
+                   <div key={det.label} className={`backdrop-blur-md px-2 py-0.5 rounded-sm border ${borderClass} ${bgClass} transition-all duration-300 flex items-center gap-2`}>
+                     <span className={`w-1 h-1 rounded-full ${isHazard ? 'bg-red-500 animate-[pulse_1s_ease-in-out_infinite]' : 'bg-white/50'}`}></span>
+                     <span className={`font-mono text-[10px] tracking-widest uppercase ${textClass}`}>
+                       {det.label} · {Math.round(det.conf * 100)}%
+                     </span>
+                   </div>
+                 );
+               })}
+            </div>
+          </>
         )}
 
         {/* HUD Elements */}
@@ -100,7 +98,7 @@ export function CCTVPanel({ state, isBroadcasting = false }: { state: IncidentSt
               )}
             </div>
 
-            <div className="absolute bottom-4 left-4 font-mono text-[10px] dark:text-white/40 text-black/50">
+            <div className="absolute bottom-4 left-4 font-mono text-[9px] dark:text-white/30 text-black/40">
               ZOOM: 2.4X<br/>
               LAT: 37.7749<br/>
               LNG: -122.4194

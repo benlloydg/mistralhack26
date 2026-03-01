@@ -78,6 +78,7 @@ def _extract_audio_pcm_sync(video_path: str, output_path: str) -> None:
         "-acodec", "pcm_s16le",
         "-ar", "16000",
         "-ac", "1",
+        "-f", "s16le",
         output_path,
     ]
     result = subprocess.run(cmd, capture_output=True, timeout=60)

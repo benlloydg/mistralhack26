@@ -13,8 +13,6 @@ import { useTranscripts } from "@/hooks/useTranscripts";
 import { useDispatches } from "@/hooks/useDispatches";
 import { ThemeToggle } from "./ThemeToggle";
 
-const DEMO_CASE_ID = "TN-2026-00417"; // Matches backend static ID
-
 export function Dashboard() {
   const [isStarting, setIsStarting] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
@@ -22,12 +20,13 @@ export function Dashboard() {
   const [showLanding, setShowLanding] = useState(true);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [audioSpectrum, setAudioSpectrum] = useState<number[]>(new Array(10).fill(0));
+  const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
 
-  // Sync state from Supabase Realtime
-  const incidentState = useIncidentState(DEMO_CASE_ID);
-  const agentLogs = useAgentLogs(DEMO_CASE_ID);
-  const transcripts = useTranscripts(DEMO_CASE_ID);
-  const dispatches = useDispatches(DEMO_CASE_ID);
+  // Sync state from Supabase Realtime — subscribes once we have a case_id
+  const incidentState = useIncidentState(activeCaseId ?? "");
+  const agentLogs = useAgentLogs(activeCaseId ?? "");
+  const transcripts = useTranscripts(activeCaseId ?? "");
+  const dispatches = useDispatches(activeCaseId ?? "");
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -53,6 +52,8 @@ export function Dashboard() {
         method: "POST",
       });
       if (!response.ok) throw new Error("Failed to start DEMO");
+      const data = await response.json();
+      setActiveCaseId(data.case_id);
       setShowLanding(false);
     } catch (err) {
       console.error(err);
@@ -69,6 +70,7 @@ export function Dashboard() {
       } catch (err) {
         console.error(err);
       }
+      setActiveCaseId(null);
       setShowLanding(true);
       window.location.reload(); // Hard reload to clear client state
     }
@@ -212,6 +214,7 @@ export function Dashboard() {
                recommendedUnits={incidentState?.recommended_units || []}
                onFirstExecute={handleApprove}
                onBroadcastStateChange={setIsBroadcasting}
+               isResolved={incidentState?.status === 'resolved_demo'}
             />
           </div>
         </div>

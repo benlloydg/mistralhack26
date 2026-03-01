@@ -11,6 +11,7 @@ Uses the ElevenLabs Python SDK's realtime speech-to-text connection.
 import asyncio
 import base64
 import logging
+import os
 import struct
 import time
 from typing import Callable, Awaitable
@@ -83,9 +84,10 @@ class ScribeRealtimeService:
 
     async def connect(self):
         """Connect to Scribe v2 Realtime WebSocket via SDK."""
+        print("[SCRIBE] Connecting to Scribe v2 Realtime...")
         client = ElevenLabs(api_key=settings.elevenlabs_api_key)
 
-        self._connection = client.speech_to_text.realtime.connect(
+        self._connection = await client.speech_to_text.realtime.connect(
             RealtimeAudioOptions(
                 model_id="scribe_v2_realtime",
                 audio_format=AudioFormat.PCM_16000,
@@ -94,24 +96,38 @@ class ScribeRealtimeService:
                 include_timestamps=True,
             )
         )
+        print(f"[SCRIBE] Connection object: {type(self._connection).__name__}")
 
-        # Register event handlers
+        # Capture the running event loop for scheduling async callbacks
+        self._loop = asyncio.get_running_loop()
+
+        # Register event handlers — SDK calls these synchronously,
+        # so async handlers need sync wrappers that schedule coroutines
         self._connection.on(RealtimeEvents.SESSION_STARTED, self._handle_session_started)
-        self._connection.on(RealtimeEvents.PARTIAL_TRANSCRIPT, self._handle_partial)
-        self._connection.on(RealtimeEvents.COMMITTED_TRANSCRIPT, self._handle_committed)
-        self._connection.on(RealtimeEvents.COMMITTED_TRANSCRIPT_WITH_TIMESTAMPS, self._handle_committed_timestamps)
+        self._connection.on(RealtimeEvents.PARTIAL_TRANSCRIPT, self._wrap_async(self._handle_partial))
+        self._connection.on(RealtimeEvents.COMMITTED_TRANSCRIPT, self._wrap_async(self._handle_committed))
+        self._connection.on(RealtimeEvents.COMMITTED_TRANSCRIPT_WITH_TIMESTAMPS, self._wrap_async(self._handle_committed_timestamps))
         self._connection.on(RealtimeEvents.ERROR, self._handle_error)
         self._connection.on(RealtimeEvents.CLOSE, self._handle_close)
 
+        print("[SCRIBE] Event handlers registered, connection ready")
         logger.info("Scribe v2 Realtime: connected")
         self._connected.set()
 
+    def _wrap_async(self, coro_fn):
+        """Wrap an async handler so the SDK can call it synchronously."""
+        def wrapper(*args, **kwargs):
+            asyncio.run_coroutine_threadsafe(coro_fn(*args, **kwargs), self._loop)
+        return wrapper
+
     def _handle_session_started(self, data):
+        print(f"[SCRIBE] SESSION STARTED: {data}")
         logger.info(f"Scribe v2 session started: {data}")
 
     async def _handle_partial(self, data):
         """Partial transcript — write to live_partials for UI shimmer."""
         text = data.get("text", "") if isinstance(data, dict) else getattr(data, "text", "")
+        print(f"[SCRIBE] PARTIAL: '{text[:60]}...' " if len(str(text)) > 60 else f"[SCRIBE] PARTIAL: '{text}'")
         if text and self._on_partial:
             await self._on_partial(text, time.time())
 
@@ -129,6 +145,7 @@ class ScribeRealtimeService:
             language = getattr(data, "language_code", getattr(data, "language", "unknown"))
 
         feed_id = self.feed_registry.get_feed_id(language)
+        print(f"[SCRIBE] *** COMMITTED #{self._transcript_count} [{feed_id}] ({language}): {text[:100]}")
         logger.info(f"Scribe v2 committed [{feed_id}] ({language}): {text[:80]}...")
 
         if text and self._on_committed:
@@ -142,12 +159,15 @@ class ScribeRealtimeService:
 
     async def _handle_committed_timestamps(self, data):
         """Committed transcript with word timestamps — delegate to committed handler."""
+        print(f"[SCRIBE] COMMITTED_WITH_TIMESTAMPS event received")
         await self._handle_committed(data)
 
     def _handle_error(self, data):
+        print(f"[SCRIBE] ERROR: {data}")
         logger.error(f"Scribe v2 error: {data}")
 
     def _handle_close(self, data=None):
+        print(f"[SCRIBE] CONNECTION CLOSED: {data}")
         logger.info("Scribe v2 connection closed")
         self._closed = True
 
@@ -157,12 +177,18 @@ class ScribeRealtimeService:
         Commits after detecting silence gaps in the audio.
         """
         await self._connected.wait()
+
+        file_size = os.path.getsize(pcm_path)
+        total_duration = file_size / (SAMPLE_RATE * BYTES_PER_SAMPLE)
+        total_chunks = file_size // CHUNK_SIZE
+        print(f"[SCRIBE] Streaming audio: {pcm_path} ({file_size} bytes, {total_duration:.1f}s, {total_chunks} chunks)")
         logger.info(f"Streaming audio: {pcm_path}")
 
         silence_count = 0
         has_speech_since_commit = False
         stream_start = time.time()
         chunk_index = 0
+        commit_count = 0
 
         with open(pcm_path, "rb") as f:
             while True:
@@ -185,6 +211,11 @@ class ScribeRealtimeService:
                     "sample_rate": SAMPLE_RATE,
                 })
 
+                # Log every 4th chunk (1 second intervals)
+                elapsed = time.time() - stream_start
+                if chunk_index % 4 == 0:
+                    print(f"[SCRIBE] Chunk {chunk_index}/{total_chunks} sent (T+{elapsed:.1f}s)")
+
                 # Silence detection for manual commit
                 is_silent = _is_silence(chunk)
                 if is_silent:
@@ -195,13 +226,20 @@ class ScribeRealtimeService:
 
                 # Commit after sustained silence following speech
                 if silence_count >= SILENCE_CHUNKS_FOR_COMMIT and has_speech_since_commit:
+                    commit_count += 1
+                    print(f"[SCRIBE] >>> COMMIT #{commit_count} at chunk {chunk_index} (T+{elapsed:.1f}s) — silence detected after speech")
                     await self._connection.commit()
                     has_speech_since_commit = False
                     silence_count = 0
 
         # Final commit for any remaining audio
         if has_speech_since_commit:
+            commit_count += 1
+            print(f"[SCRIBE] >>> FINAL COMMIT #{commit_count} — end of audio")
             await self._connection.commit()
+
+        total_time = time.time() - stream_start
+        print(f"[SCRIBE] Audio streaming complete: {chunk_index} chunks, {commit_count} commits in {total_time:.1f}s")
 
         logger.info(f"Audio streaming complete. {chunk_index} chunks sent in {time.time() - stream_start:.1f}s")
 

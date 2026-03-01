@@ -8,13 +8,15 @@ export function ResponseLanes({
   transcripts = [],
   recommendedUnits = [],
   onFirstExecute,
-  onBroadcastStateChange
+  onBroadcastStateChange,
+  isResolved
 }: { 
   dispatches: Dispatch[], 
   transcripts?: Transcript[],
   recommendedUnits?: string[],
   onFirstExecute?: () => void,
-  onBroadcastStateChange?: (isPlaying: boolean) => void
+  onBroadcastStateChange?: (isPlaying: boolean) => void,
+  isResolved?: boolean
 }) {
   const [executingUnits, setExecutingUnits] = useState<Record<string, 'executing' | 'done'>>({});
   const [broadcastState, setBroadcastState] = useState<'ready' | 'playing' | 'sent'>('ready');
@@ -221,6 +223,24 @@ export function ResponseLanes({
                    )}
                  </button>
                )}
+            </div>
+          </div>
+        )}
+
+        {/* Generate Report Card */}
+        {isResolved && (
+          <div className="p-3 rounded-sm border transition-all animate-in fade-in slide-in-from-bottom border-blue-500/50 bg-blue-500/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-blue-500 font-bold">📋</span>
+                <span className="font-mono text-[11px] font-bold tracking-widest uppercase text-blue-500">After-Action Report</span>
+              </div>
+              <a 
+                href="/report/demo"
+                className="text-[10px] uppercase font-mono font-bold tracking-widest bg-blue-500 hover:bg-blue-400 text-white px-3 py-1.5 rounded-sm shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all flex items-center gap-1.5 min-w-[100px] justify-center"
+              >
+                <span className="animate-[pulse_2s_ease-in-out_infinite] inline-block">[GENERATE]</span>
+              </a>
             </div>
           </div>
         )}

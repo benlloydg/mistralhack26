@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, Loader2 } from "lucide-react";
+import { Play, Loader2, RotateCcw } from "lucide-react";
 import { CaseFilePanel } from "./CaseFilePanel";
 import { AgentTerminal } from "./AgentTerminal";
 import { CCTVPanel } from "./CCTVPanel";
@@ -20,6 +20,7 @@ export function Dashboard() {
   const [isApproving, setIsApproving] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showLanding, setShowLanding] = useState(true);
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
 
   // Sync state from Supabase Realtime
   const incidentState = useIncidentState(DEMO_CASE_ID);
@@ -60,9 +61,15 @@ export function Dashboard() {
     }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (confirm("Reset demo and return to scenarios?")) {
+      try {
+        await fetch("http://localhost:8000/api/v1/demo/reset", { method: "POST" });
+      } catch (err) {
+        console.error(err);
+      }
       setShowLanding(true);
+      window.location.reload(); // Hard reload to clear client state
     }
   };
 
@@ -152,6 +159,14 @@ export function Dashboard() {
             </div>
           )}
           
+          <button 
+            onClick={handleReset}
+            title="Reset Demo State"
+            className="p-2 border dark:border-white/10 border-black/10 rounded-sm dark:bg-white/5 bg-black/5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+          >
+            <RotateCcw className="w-4 h-4 dark:text-white/70 text-black/70" />
+          </button>
+
           <ThemeToggle />
           <div className="dark:bg-black/50 bg-black/5 border dark:border-white/10 border-black/10 rounded-full px-4 py-1.5 flex items-center gap-3">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-[pulse_3s_ease-in-out_infinite]"></div>
@@ -169,7 +184,7 @@ export function Dashboard() {
             <span className="text-[10px] font-mono font-bold tracking-widest uppercase dark:text-white/40 text-black/40">SCENE MONITORING // CAM-04 + MIC-04</span>
           </div>
           <div className="flex-[3] min-h-0">
-            <CCTVPanel state={incidentState} />
+            <CCTVPanel state={incidentState} isBroadcasting={isBroadcasting} />
           </div>
           <div className="flex-[2] min-h-0">
             <TranscriptPanel transcripts={transcripts} />
@@ -195,6 +210,7 @@ export function Dashboard() {
                transcripts={transcripts}
                recommendedUnits={incidentState?.recommended_units || []}
                onFirstExecute={handleApprove}
+               onBroadcastStateChange={setIsBroadcasting}
             />
           </div>
         </div>

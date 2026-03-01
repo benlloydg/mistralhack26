@@ -1,4 +1,5 @@
 import { IncidentState } from "@/lib/types";
+import { Volume2 } from "lucide-react";
 import { useState } from "react";
 
 const TIMED_SCENES = [
@@ -10,7 +11,7 @@ const TIMED_SCENES = [
   { time: 0, desc: "Nighttime intersection with light traffic", detections: [{label: 'persons', conf: 0.90}] }
 ];
 
-export function CCTVPanel({ state }: { state: IncidentState | null }) {
+export function CCTVPanel({ state, isBroadcasting = false }: { state: IncidentState | null, isBroadcasting?: boolean }) {
   // Demo states to show some visual activity 
   const isActive = state && ['active', 'escalated', 'critical'].includes(state.status);
   const [videoTime, setVideoTime] = useState(0);
@@ -89,6 +90,15 @@ export function CCTVPanel({ state }: { state: IncidentState | null }) {
         {/* HUD Elements */}
         {isActive && (
           <>
+            <div className="absolute top-4 left-4 z-30">
+              {isBroadcasting && (
+                <div className="flex bg-amber-500/90 text-black px-3 py-1.5 rounded-sm items-center gap-2 animate-[pulse_1s_ease-in-out_infinite] shadow-[0_0_20px_rgba(245,158,11,0.6)]">
+                  <Volume2 className="w-4 h-4" />
+                  <span className="font-mono text-[10px] font-bold tracking-widest uppercase">Evacuation Warning</span>
+                </div>
+              )}
+            </div>
+
             <div className="absolute bottom-4 left-4 font-mono text-[10px] dark:text-white/40 text-black/50">
               ZOOM: 2.4X<br/>
               LAT: 37.7749<br/>

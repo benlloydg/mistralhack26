@@ -7,12 +7,14 @@ export function ResponseLanes({
   dispatches, 
   transcripts = [],
   recommendedUnits = [],
-  onFirstExecute
+  onFirstExecute,
+  onBroadcastStateChange
 }: { 
   dispatches: Dispatch[], 
   transcripts?: Transcript[],
   recommendedUnits?: string[],
-  onFirstExecute?: () => void
+  onFirstExecute?: () => void,
+  onBroadcastStateChange?: (isPlaying: boolean) => void
 }) {
   const [executingUnits, setExecutingUnits] = useState<Record<string, 'executing' | 'done'>>({});
   const [broadcastState, setBroadcastState] = useState<'ready' | 'playing' | 'sent'>('ready');
@@ -60,6 +62,10 @@ export function ResponseLanes({
 
   // Simulate sequential playing of broadcast languages
   useEffect(() => {
+    if (onBroadcastStateChange) {
+      onBroadcastStateChange(broadcastState === 'playing');
+    }
+    
     if (broadcastState === 'playing' && outboundMessages.length > 0) {
       if (activeLangIndex < outboundMessages.length) {
         const timer = setTimeout(() => {
@@ -70,7 +76,7 @@ export function ResponseLanes({
         setBroadcastState('sent');
       }
     }
-  }, [broadcastState, activeLangIndex, outboundMessages.length]);
+  }, [broadcastState, activeLangIndex, outboundMessages.length, onBroadcastStateChange]);
 
   const getStatusColor = (status: string, localState?: string) => {
     if (localState === 'done') return 'bg-blue-500/10 border-blue-500/50 text-blue-600 dark:text-blue-400';

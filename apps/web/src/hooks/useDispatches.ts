@@ -16,7 +16,7 @@ export function useDispatches(caseId: string) {
         if (data) setDispatches(data as Dispatch[]);
       });
 
-    // Realtime — listen for new inserts
+    // Realtime — listen for inserts and updates
     const channel = supabase
       .channel(`dispatches_${caseId}`)
       .on(
@@ -29,6 +29,20 @@ export function useDispatches(caseId: string) {
         },
         (payload) => {
           setDispatches((prev) => [...prev, payload.new as Dispatch]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'dispatches',
+          filter: `case_id=eq.${caseId}`,
+        },
+        (payload) => {
+          setDispatches((prev) =>
+            prev.map((d) => (d.id === (payload.new as Dispatch).id ? (payload.new as Dispatch) : d))
+          );
         }
       )
       .subscribe();

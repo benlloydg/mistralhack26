@@ -338,10 +338,21 @@ class DemoOrchestrator:
                            color="amber" if triage.severity in (Severity.MEDIUM, Severity.HIGH) else "red",
                            flash=triage.severity in (Severity.HIGH, Severity.CRITICAL))
 
-            # ── PHASE 3b: Proactive dispatch — generate briefs for NEW units immediately ──
-            # No severity gate — dispatch as soon as triage recommends ANY units
+            # ── PHASE 3b: Proactive dispatch — show units on UI INSTANTLY ──
             new_units = [u for u in triage.recommended_units if u not in self._dispatched_units]
             if new_units:
+                # Insert placeholder rows IMMEDIATELY so UI shows green buttons now
+                for unit in new_units:
+                    if unit not in self._dispatched_units:
+                        try:
+                            self.deps.supabase.table("dispatches").insert({
+                                "case_id": self.deps.case_id,
+                                "unit_type": unit,
+                                "status": "recommended",
+                            }).execute()
+                        except Exception:
+                            pass
+                # Generate full briefs (with TTS audio) in background
                 asyncio.create_task(
                     self._dispatch_units(new_units),
                     name=f"dispatch_{segment_index}",
@@ -684,19 +695,17 @@ class DemoOrchestrator:
                 audio_url = await generate_and_save(
                     brief.voice_message, "en", f"dispatch_{safe_unit}.mp3"
                 )
-                self.deps.supabase.table("dispatches").insert({
-                    "case_id": self.deps.case_id,
-                    "unit_type": unit,
+                # Update the placeholder row with full brief data
+                self.deps.supabase.table("dispatches").update({
                     "unit_assigned": brief.unit_assigned,
                     "destination": brief.destination,
                     "eta_minutes": brief.eta_minutes,
-                    "status": "dispatched",
                     "voice_message": brief.voice_message,
                     "rationale": brief.rationale,
                     "audio_url": audio_url,
-                }).execute()
-                self.state.log("dispatch", "unit_dispatched",
-                               f"{unit} dispatched: {brief.unit_assigned}",
+                }).eq("case_id", self.deps.case_id).eq("unit_type", unit).execute()
+                self.state.log("dispatch", "unit_briefed",
+                               f"{unit} brief ready: {brief.unit_assigned}",
                                data={"audio_url": audio_url},
                                color="green", flash=True)
             except Exception as e:
@@ -713,9 +722,15 @@ class DemoOrchestrator:
     async def _post_audio_finalize(self):
         """After audio stream completes: confirm dispatched units, generate summary."""
 
-        # Confirm all dispatched units
+        # Confirm all dispatched units — update status in DB so frontend shows them as confirmed
         state = self.state.get_state()
         self.state.update_state(confirmed_units=list(self._dispatched_units))
+        try:
+            self.deps.supabase.table("dispatches").update({
+                "status": "confirmed",
+            }).eq("case_id", self.deps.case_id).execute()
+        except Exception as e:
+            logger.debug(f"Dispatch confirm update error: {e}")
 
         # Dispatch any remaining recommended units that haven't been dispatched yet
         remaining = [u for u in state.recommended_units if u not in self._dispatched_units]

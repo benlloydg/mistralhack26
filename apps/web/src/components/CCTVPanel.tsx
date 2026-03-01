@@ -214,7 +214,7 @@ export function CCTVPanel({
         )}
 
         {/* HUD Elements */}
-        {isActive && (
+        {(isActive || isBroadcasting || state?.status === 'resolved_demo') && (
           <>
             <div className="absolute top-11 left-0 right-0 w-full z-30">
               {isBroadcasting && (

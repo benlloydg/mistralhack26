@@ -1,9 +1,10 @@
-import { Dispatch } from "@/lib/types";
+import { Dispatch, Transcript } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Check, Clock, Navigation } from "lucide-react";
+import { Check, Clock, Navigation, Volume2, Radio } from "lucide-react";
 
-export function ResponseLanes({ dispatches }: { dispatches: Dispatch[] }) {
+export function ResponseLanes({ dispatches, transcripts = [] }: { dispatches: Dispatch[], transcripts?: Transcript[] }) {
   
+  const outboundMessages = transcripts.filter(t => (t.caller_label || t.caller_id)?.toLowerCase() === 'dispatch');
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'dispatched': return 'bg-emerald-500/10 border-emerald-500/50 text-emerald-600 dark:text-emerald-400';
@@ -63,6 +64,34 @@ export function ResponseLanes({ dispatches }: { dispatches: Dispatch[] }) {
           ))
         )}
       </div>
+
+      {outboundMessages.length > 0 && (
+        <div className="border-t dark:border-white/10 border-black/10 p-4 bg-amber-500/5 dark:bg-amber-500/5 animate-in fade-in duration-500 shrink-0 border-y-0">
+          <div className="flex items-center gap-2 mb-3">
+            <Radio className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+            <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-amber-500">Priority Broadcast</span>
+          </div>
+          <div className="space-y-3 font-mono text-xs">
+            {outboundMessages.map(msg => (
+               <div key={msg.id} className="flex flex-col gap-1">
+                 <div className="flex items-start gap-2 text-amber-600 dark:text-amber-400 font-bold uppercase">
+                   <Volume2 className="w-3 h-3 mt-0.5 shrink-0" />
+                   {msg.language}: "{msg.original_text}"
+                 </div>
+                 {msg.translated_text && msg.translated_text !== msg.original_text && (
+                   <div className="pl-5 text-[10px] dark:text-white/50 text-black/50">
+                     "{msg.translated_text}"
+                   </div>
+                 )}
+               </div>
+            ))}
+            <div className="pt-2 flex items-center gap-2 text-[10px] text-emerald-500 uppercase tracking-widest font-bold">
+               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+               Broadcast Sent
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

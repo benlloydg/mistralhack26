@@ -38,16 +38,17 @@ export function CaseFilePanel({ state }: { state: IncidentState | null }) {
         </div>
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="border dark:border-white/10 border-black/10 rounded-sm p-3 dark:bg-white/5 bg-black/5">
-            <div className="text-[10px] uppercase font-mono dark:text-white/40 text-black/50 mb-1">Callers</div>
-            <div className="text-lg font-mono font-bold">{state.caller_count}</div>
+        <div className="flex items-center gap-6 border-y dark:border-white/10 border-black/10 py-3 dark:bg-white/5 bg-black/5 px-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase font-mono dark:text-white/40 text-black/50">Speakers:</span>
+            <span className="text-sm font-mono font-bold">{state.caller_count}</span>
           </div>
-          <div className="border dark:border-white/10 border-black/10 rounded-sm p-3 dark:bg-white/5 bg-black/5">
-            <div className="text-[10px] uppercase font-mono dark:text-white/40 text-black/50 mb-1 flex items-center gap-1.5">
-              <Users className="w-3 h-3" /> People Est.
-            </div>
-            <div className="text-lg font-mono font-bold">{state.people_count_estimate || '--'}</div>
+          <div className="w-px h-4 dark:bg-white/20 bg-black/20"></div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase font-mono dark:text-white/40 text-black/50 flex items-center gap-1.5">
+              <Users className="w-3 h-3" /> People Est:
+            </span>
+            <span className="text-sm font-mono font-bold">{state.people_count_estimate || '--'}</span>
           </div>
         </div>
 
@@ -90,9 +91,9 @@ export function CaseFilePanel({ state }: { state: IncidentState | null }) {
 
         {/* Operator Summary */}
         {state.operator_summary && (
-          <div className="mt-8 pt-6 border-t dark:border-white/10 border-black/10">
+          <div className="mt-6 pt-4 border-t dark:border-white/10 border-black/10">
             <div className="text-[10px] font-mono uppercase dark:text-white/40 text-black/50 mb-2">Operator Summary</div>
-            <p className="text-sm leading-relaxed dark:text-white/80 text-black/80 border-l-2 border-emerald-500 pl-3">
+            <p className="text-xs leading-relaxed dark:text-white/80 text-black/80 border-l-2 border-emerald-500 pl-3">
               {state.operator_summary}
             </p>
           </div>

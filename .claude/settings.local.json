@@ -76,7 +76,8 @@
       "Bash(cd /Users/benlloyd/Desktop/REPO/mistralhack26 && ls -d specs/[0-9]*-scribe-v2-realtime 2>/dev/null || echo \"No specs directory matches\")",
       "Bash(.specify/scripts/bash/create-new-feature.sh --json --number 1 --short-name \"scribe-v2-realtime\" \"Scribe v2 Realtime Integration - Replace pre-recorded audio files with real-time audio extraction from scene.mp4 using ElevenLabs Scribe v2 Realtime WebSocket for continuous speech-to-text with automatic language detection\")",
       "Bash(find /Users/benlloyd/Desktop/REPO/mistralhack26/apps/server/src -type f -name \"*.py\" 2>/dev/null | sort)",
-      "Bash(find /Users/benlloyd/Desktop/REPO/mistralhack26 -name \"*schema*\" -o -name \"*migration*\" 2>/dev/null | head -20)"
+      "Bash(find /Users/benlloyd/Desktop/REPO/mistralhack26 -name \"*schema*\" -o -name \"*migration*\" 2>/dev/null | head -20)",
+      "WebFetch(domain:elevenlabs.io)"
     ]
   }
 }

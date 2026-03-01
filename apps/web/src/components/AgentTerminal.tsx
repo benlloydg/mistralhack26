@@ -39,14 +39,14 @@ export function AgentTerminal({ logs }: { logs: AgentLog[] }) {
       case 'triageagent': 
       case 'evidencefusion': 
       case 'casematchagent':
-        return 'mistral-large';
+        return 'mistral-lg';
       case 'visionagent': 
         return 'pixtral-12b';
       case 'voiceagent': 
       case 'prioritybroadcast':
-        return 'elevenlabs-scribe';
+        return '11labs-scribe';
       default: 
-        return 'triage-os-core';
+        return 'triage-core';
     }
   };
 

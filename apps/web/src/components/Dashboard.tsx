@@ -162,32 +162,36 @@ export function Dashboard() {
       </header>
 
       {/* Main Grid Layout */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-12 grid-rows-1 md:grid-rows-2 gap-4 md:gap-6 min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 min-h-0">
         
-        {/* Left Column (4 cols) */}
-        <div className="md:col-span-4 md:row-span-2 flex flex-col gap-4 min-h-0">
-          <div className="flex-1 min-h-0">
-            <CaseFilePanel state={incidentState} />
+        {/* Left Column: SOURCES (40% - 5 cols) */}
+        <div className="lg:col-span-5 flex flex-col gap-4 min-h-0">
+          <div className="flex items-center gap-2 px-1 pb-1 mb-[-8px] border-b dark:border-white/10 border-black/10 shrink-0">
+            <span className="text-[10px] font-mono font-bold tracking-widest uppercase dark:text-white/40 text-black/40">SCENE MONITORING // CAM-04 + MIC-04</span>
           </div>
-          <div className="h-40 md:h-[30%] shrink-0">
+          <div className="flex-[3] min-h-0">
             <CCTVPanel state={incidentState} />
+          </div>
+          <div className="flex-[2] min-h-0">
+            <TranscriptPanel transcripts={transcripts} />
           </div>
         </div>
 
-        {/* Middle Column (5 cols) */}
-        <div className="md:col-span-5 md:row-span-2 flex flex-col gap-4 min-h-0">
+        {/* Middle Column: INTELLIGENCE (33% - 4 cols) */}
+        <div className="lg:col-span-4 flex flex-col gap-4 min-h-0">
           <div className="h-[40%] min-h-0">
-            <TranscriptPanel transcripts={transcripts} />
+            <CaseFilePanel state={incidentState} />
           </div>
-          <div className="flex-1 min-h-0">
+          <div className="h-[60%] min-h-0">
             <AgentTerminal logs={agentLogs} />
           </div>
         </div>
 
-        {/* Right Column (3 cols) */}
-        <div className="md:col-span-3 md:row-span-2 flex flex-col gap-4 min-h-0">
+        {/* Right Column: ACTIONS (25% - 3 cols) */}
+        <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
           <div className="flex-1 min-h-0">
-            <ResponseLanes dispatches={dispatches} />
+            {/* Pass transcripts down to ResponseLanes to render outbound broadcasts */}
+            <ResponseLanes dispatches={dispatches} transcripts={transcripts} />
           </div>
           <div className="shrink-0">
             {incidentState === null ? (

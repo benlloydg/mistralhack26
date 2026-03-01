@@ -13,66 +13,59 @@ export function CaseFilePanel({ state }: { state: IncidentState | null }) {
 
   return (
     <div className="flex flex-col h-full tech-glass">
-      <div className="border-b dark:border-white/10 border-black/10 p-3 px-4 flex justify-between items-center dark:bg-black/40 bg-zinc-100">
-        <h2 className="text-xs font-mono uppercase tracking-widest dark:text-white/50 text-slate-500 font-semibold">Triage // Case File</h2>
-        <div className="text-xs font-mono font-bold text-blue-500">{state.case_id}</div>
-      </div>
-
-      <div className="p-5 flex-1 overflow-y-auto space-y-6">
+      <div className="p-4 flex-1 overflow-y-auto flex flex-col justify-center">
         {/* Header Section */}
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between mb-3">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight uppercase dark:text-white/90 text-black/90">
+            <div className="text-[10px] font-mono uppercase tracking-widest dark:text-white/50 text-slate-500 font-semibold mb-1">
+              Triage // Case File
+            </div>
+            <h1 className="text-xl font-bold tracking-tight uppercase dark:text-white/90 text-black/90 leading-none mb-2">
               {state.status === 'intake' 
                 ? 'INCOMING CALL' 
                 : state.incident_type 
                   ? `${state.incident_type.replace(/_/g, ' ')}${state.hazard_flags.includes('engine_fire') ? ' + FIRE' : ''}` 
                   : 'UNCLASSIFIED INCIDENT'}
             </h1>
-            <div className="flex items-center gap-2 mt-2 dark:text-white/60 text-slate-600 font-mono text-xs">
-              <MapPin className="w-3.5 h-3.5" />
-              <span>{state.location_normalized || state.location_raw || 'Awaiting location data...'}</span>
+            <div className="flex items-center gap-2 dark:text-white/60 text-slate-600 font-mono text-[11px]">
+              <MapPin className="w-3 h-3" />
+              <span>{state.location_normalized || state.location_raw || 'Awaiting location...'}</span>
+              <span className="opacity-50">·</span>
+              <span className="uppercase tracking-widest">Speakers: {state.caller_count}</span>
+              <span className="opacity-50">·</span>
+              <span className="uppercase tracking-widest flex items-center gap-1"><Users className="w-3 h-3"/> {state.people_count_estimate || '--'}</span>
             </div>
           </div>
-          <SeverityBadge severity={state.severity} />
+          <div className="flex flex-col items-end gap-2">
+            <div className="text-[10px] font-mono font-bold text-blue-500 tracking-widest">{state.case_id}</div>
+            <SeverityBadge severity={state.severity} />
+          </div>
         </div>
 
-        {/* Flags Section */}
-        <div className="space-y-4">
-          {state.hazard_flags.length > 0 && (
-            <div>
-              <div className="text-xs font-mono uppercase text-red-400 mb-2 flex items-center gap-1.5"><Flame className="w-3.5 h-3.5" /> Active Hazards</div>
-              <div className="flex flex-wrap gap-2">
-                {state.hazard_flags.map((h, idx) => (
-                  <span 
-                    key={h} 
-                    className="bg-red-500/10 border border-red-500/30 text-red-500 text-[10px] font-mono uppercase px-2 py-1 rounded-sm animate-in fade-in zoom-in-75 duration-300 fill-mode-both"
-                    style={{ animationDelay: `${idx * 150}ms` }}
-                  >
-                    {h.replace(/_/g, ' ')}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {state.injury_flags.length > 0 && (
-            <div>
-              <div className="text-xs font-mono uppercase text-amber-400 mb-2 flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" /> Injury Flags</div>
-              <div className="flex flex-wrap gap-2">
-                {state.injury_flags.map((i, idx) => (
-                  <span 
-                    key={i} 
-                    className="bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[10px] font-mono uppercase px-2 py-1 rounded-sm animate-in fade-in zoom-in-75 duration-300 fill-mode-both"
-                    style={{ animationDelay: `${idx * 150}ms` }}
-                  >
-                    {i.replace(/_/g, ' ')}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Combined Flags Row */}
+        {(state.hazard_flags.length > 0 || state.injury_flags.length > 0) && (
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {state.hazard_flags.length > 0 && <AlertTriangle className="w-3.5 h-3.5 text-red-500 mr-1 animate-pulse" />}
+            {state.hazard_flags.map((h, idx) => (
+              <span 
+                key={h} 
+                className="bg-red-500 text-black font-bold tracking-widest text-[9px] font-mono uppercase px-2 py-0.5 rounded-sm animate-in fade-in zoom-in-75 duration-300 fill-mode-both shadow-[0_0_10px_rgba(239,68,68,0.3)]"
+                style={{ animationDelay: `${idx * 150}ms` }}
+              >
+                {h.replace(/_/g, ' ')}
+              </span>
+            ))}
+            {state.injury_flags.map((i, idx) => (
+              <span 
+                key={i} 
+                className="bg-amber-500/20 border border-amber-500/50 text-amber-500 font-bold tracking-widest text-[9px] font-mono uppercase px-2 py-0.5 rounded-sm animate-in fade-in zoom-in-75 duration-300 fill-mode-both"
+                style={{ animationDelay: `${(state.hazard_flags.length + idx) * 150}ms` }}
+              >
+                {i.replace(/_/g, ' ')}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Operator Summary */}
         {state.operator_summary && (

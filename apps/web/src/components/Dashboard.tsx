@@ -193,10 +193,10 @@ export function Dashboard() {
 
         {/* Middle Column: INTELLIGENCE (33% - 4 cols) */}
         <div className="lg:col-span-4 flex flex-col gap-4 min-h-0">
-          <div className="h-[40%] min-h-0">
+          <div className="shrink-0 min-h-0">
             <CaseFilePanel state={incidentState} />
           </div>
-          <div className="h-[60%] min-h-0">
+          <div className="flex-1 min-h-0">
             <AgentTerminal logs={agentLogs} />
           </div>
         </div>

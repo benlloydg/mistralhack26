@@ -57,8 +57,8 @@ export function CCTVPanel({ state, isBroadcasting = false }: { state: IncidentSt
           <>
             {/* Description Box */}
             <div className="absolute bottom-4 left-0 right-0 w-full flex justify-center pointer-events-none z-20">
-               <div className="backdrop-blur-md px-3 py-1.5 rounded-sm border border-white/20 bg-black/60 text-center transition-all duration-500 max-w-lg">
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-white/90">
+               <div className="backdrop-blur-md px-3 py-1 rounded-sm border border-white/20 bg-black/60 text-center transition-all duration-500 max-w-lg">
+                  <span className="font-mono text-[10px] leading-tight uppercase tracking-widest text-white/90">
                     {currentScene.desc}
                   </span>
                </div>

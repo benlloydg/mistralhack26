@@ -25,8 +25,8 @@
 </p>
 
 <p align="center">
-  <a href="https://youtu.be/La05zm5sfnA">
-    <img src="https://img.youtube.com/vi/La05zm5sfnA/maxresdefault.jpg" width="700" alt="DISPATCH Demo" />
+  <a href="https://youtu.be/uu6edkpk9Gw">
+    <img src="https://img.youtube.com/vi/uu6edkpk9Gw/maxresdefault.jpg" width="700" alt="DISPATCH Demo" />
   </a>
   <br>
   <em>Watch the full demo</em>

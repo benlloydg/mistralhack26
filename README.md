@@ -24,6 +24,14 @@
   <img src="https://img.shields.io/badge/Pydantic--AI-Agents-E92063?style=flat-square" alt="Pydantic-AI" />
 </p>
 
+<p align="center">
+  <a href="https://youtu.be/La05zm5sfnA">
+    <img src="https://img.youtube.com/vi/La05zm5sfnA/maxresdefault.jpg" width="700" alt="DISPATCH Demo" />
+  </a>
+  <br>
+  <em>Watch the full demo</em>
+</p>
+
 ---
 
 Emergency scenes are loud, chaotic, and multilingual. Bystanders shout in whatever language they speak. Cameras capture what no one reports. Today, all of this is lost.

@@ -290,6 +290,9 @@ class ScribeRealtimeService:
                 chunk = f.read(CHUNK_SIZE)
                 if not chunk:
                     break
+                if self._closed:
+                    logger.info("Scribe connection closed mid-stream, stopping")
+                    break
 
                 chunk_index += 1
 
@@ -300,12 +303,19 @@ class ScribeRealtimeService:
                 if expected_time > now:
                     await asyncio.sleep(expected_time - now)
 
-                # Send chunk
-                chunk_b64 = base64.b64encode(chunk).decode("utf-8")
-                await self._connection.send({
-                    "audio_base_64": chunk_b64,
-                    "sample_rate": SAMPLE_RATE,
-                })
+                # Send chunk — handle server closing connection gracefully
+                try:
+                    chunk_b64 = base64.b64encode(chunk).decode("utf-8")
+                    await self._connection.send({
+                        "audio_base_64": chunk_b64,
+                        "sample_rate": SAMPLE_RATE,
+                    })
+                except Exception as e:
+                    if "1000" in str(e):
+                        logger.info("Scribe server closed connection (normal)")
+                    else:
+                        logger.warning(f"Scribe send error: {e}")
+                    break
 
                 # Log every ~1 second of audio
                 if chunk_index % log_interval == 0:

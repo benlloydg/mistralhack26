@@ -112,6 +112,122 @@ def _render_transcripts(transcripts: list) -> str:
     return items
 
 
+def _render_evidence_fusion(logs: list) -> str:
+    """Render evidence fusion cards from agent_logs with structured data."""
+    fusion_logs = [
+        l for l in logs
+        if l.get("agent") == "evidence_fusion"
+        and l.get("event_type") in ("CROSS_MODAL", "CORROBORATION", "EVACUATION", "reasoning")
+    ]
+    if not fusion_logs:
+        return "<p style='color:#737373'>No fusion events recorded</p>"
+
+    cards = ""
+    for log in fusion_logs:
+        event_type = log.get("event_type", "")
+        message = log.get("message", "")
+        data = log.get("data") or {}
+        ts = (log.get("created_at") or "")[:19].replace("T", " ")
+        model = log.get("model", "")
+
+        if event_type in ("CROSS_MODAL", "CORROBORATION"):
+            claim = data.get("claim", "Unknown")
+            sources = data.get("sources", [])
+            confidence = data.get("combined_confidence", 0)
+            modalities = data.get("modalities", [])
+            is_cross = data.get("cross_modal", False)
+            severity_delta = data.get("severity_delta", "")
+            evac = data.get("evacuation_triggered", False)
+
+            # Badge color
+            border_color = "#ef4444" if is_cross else "#22c55e"
+            type_label = "CROSS-MODAL" if is_cross else "CORROBORATED"
+            type_bg = "#7f1d1d" if is_cross else "#14532d"
+
+            # Source pills
+            source_pills = ""
+            for src in sources:
+                src_type = src.get("type", "unknown")
+                src_conf = src.get("confidence", 0)
+                pill_color = "#06b6d4" if "vision" in src_type.lower() or "cctv" in src_type.lower() else "#22c55e"
+                source_pills += f'<span style="display:inline-block;background:{pill_color}20;border:1px solid {pill_color}60;color:{pill_color};padding:0.15rem 0.5rem;border-radius:3px;font-size:0.75rem;margin-right:0.35rem">{src_type} ({src_conf:.0%})</span>'
+
+            # Modality icons
+            modality_str = " + ".join(modalities)
+
+            # Confidence bar
+            conf_pct = int(confidence * 100)
+            conf_color = "#ef4444" if conf_pct >= 80 else "#eab308" if conf_pct >= 50 else "#22c55e"
+
+            evac_badge = ""
+            if evac:
+                evac_badge = '<span style="display:inline-block;background:#7f1d1d;border:1px solid #ef4444;color:#ef4444;padding:0.15rem 0.5rem;border-radius:3px;font-size:0.7rem;font-weight:700;margin-left:0.5rem;letter-spacing:0.05em">EVACUATION TRIGGERED</span>'
+
+            delta_badge = ""
+            if severity_delta:
+                delta_badge = f'<span style="display:inline-block;background:#422006;border:1px solid #f97316;color:#f97316;padding:0.15rem 0.5rem;border-radius:3px;font-size:0.7rem;margin-left:0.5rem">{severity_delta}</span>'
+
+            cards += f"""
+            <div style="background:#141414;border:1px solid {border_color}40;border-left:3px solid {border_color};border-radius:8px;padding:1rem;margin-bottom:0.75rem">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem">
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <span style="display:inline-block;background:{type_bg};border:1px solid {border_color};color:{border_color};padding:0.2rem 0.6rem;border-radius:4px;font-size:0.7rem;font-weight:700;letter-spacing:0.05em">{type_label}</span>
+                  <strong style="font-size:0.95rem;color:#f5f5f5">{claim.upper()}</strong>
+                  {evac_badge}{delta_badge}
+                </div>
+                <span style="font-size:0.75rem;color:#525252;font-family:monospace">{ts}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem">
+                <div>
+                  <span style="font-size:0.7rem;color:#737373;text-transform:uppercase;letter-spacing:0.08em">Sources</span><br>
+                  {source_pills}
+                </div>
+                <div>
+                  <span style="font-size:0.7rem;color:#737373;text-transform:uppercase;letter-spacing:0.08em">Modalities</span><br>
+                  <span style="font-size:0.85rem;color:#d4d4d4">{modality_str}</span>
+                </div>
+                <div>
+                  <span style="font-size:0.7rem;color:#737373;text-transform:uppercase;letter-spacing:0.08em">Combined Confidence</span><br>
+                  <div style="display:flex;align-items:center;gap:0.5rem">
+                    <div style="width:80px;height:6px;background:#262626;border-radius:3px;overflow:hidden">
+                      <div style="width:{conf_pct}%;height:100%;background:{conf_color};border-radius:3px"></div>
+                    </div>
+                    <span style="font-size:0.85rem;font-weight:600;color:{conf_color}">{conf_pct}%</span>
+                  </div>
+                </div>
+              </div>
+              <div style="font-size:0.75rem;color:#525252;border-top:1px solid #262626;padding-top:0.4rem;margin-top:0.4rem">
+                Agent: <span style="color:#a855f7">evidence_fusion</span> · Model: <span style="color:#3b82f6">{model or "mistral-large-latest"}</span>
+              </div>
+            </div>"""
+
+        elif event_type == "EVACUATION":
+            cards += f"""
+            <div style="background:#1a0a0a;border:2px solid #ef4444;border-radius:8px;padding:1rem;margin-bottom:0.75rem">
+              <div style="display:flex;align-items:center;gap:0.5rem">
+                <span style="font-size:1.2rem">🚨</span>
+                <strong style="color:#ef4444;font-size:0.95rem;letter-spacing:0.05em">AUTONOMOUS EVACUATION PROTOCOL</strong>
+                <span style="font-size:0.75rem;color:#525252;font-family:monospace;margin-left:auto">{ts}</span>
+              </div>
+              <p style="color:#fca5a5;font-size:0.85rem;margin-top:0.5rem">{message}</p>
+            </div>"""
+
+        elif event_type == "reasoning":
+            cards += f"""
+            <div style="background:#141414;border:1px solid #262626;border-left:3px solid #a855f7;border-radius:8px;padding:0.75rem;margin-bottom:0.75rem">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem">
+                <span style="font-size:0.7rem;color:#a855f7;text-transform:uppercase;letter-spacing:0.08em;font-weight:600">Fusion Reasoning</span>
+                <span style="font-size:0.75rem;color:#525252;font-family:monospace;margin-left:auto">{ts}</span>
+              </div>
+              <p style="color:#a3a3a3;font-size:0.85rem;font-style:italic">{message}</p>
+              <div style="font-size:0.75rem;color:#525252;margin-top:0.4rem">
+                Model: <span style="color:#3b82f6">{model or "mistral-large-latest"}</span>
+              </div>
+            </div>"""
+
+    return cards
+
+
 def _render_dispatches(dispatches: list) -> str:
     rows = ""
     for d in dispatches:
@@ -309,6 +425,11 @@ async def case_report(case_id: str):
     <div>
       {"".join(f"<div class='detection'><strong>{d.get('type', d.get('label', '?'))}</strong> — {d.get('confidence', '?')}</div>" for d in state.get("vision_detections", [])) or "<p style='color:#737373'>No detections</p>"}
     </div>
+  </section>
+
+  <section>
+    <h2>Evidence Fusion</h2>
+    {_render_evidence_fusion(logs)}
   </section>
 
   <section>

@@ -29,7 +29,7 @@
     <img src="https://img.youtube.com/vi/uu6edkpk9Gw/maxresdefault.jpg" width="700" alt="DISPATCH Demo" />
   </a>
   <br>
-  <em>Watch the full demo</em>
+  <a href="https://www.youtube.com/watch?v=uu6edkpk9Gw">https://www.youtube.com/watch?v=uu6edkpk9Gw</a>
 </p>
 
 ---

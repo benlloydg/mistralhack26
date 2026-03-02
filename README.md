@@ -222,6 +222,12 @@ npm run dev
 
 ---
 
+## Author
+
+**Benlloyd Goldstein** &nbsp; [@benlloydg](https://x.com/benlloydg)
+
+---
+
 <p align="center">
   <strong>Built with</strong>
 </p>

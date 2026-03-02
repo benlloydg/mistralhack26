@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,7 +7,25 @@ from fastapi.staticfiles import StaticFiles
 from .routes import demo, health, report
 from .services.tts import GENERATED_AUDIO_DIR
 
-app = FastAPI(title="TriageNet API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    yield
+    # Shutdown — clean up active orchestrator / Scribe connections
+    if demo._active_orchestrator:
+        demo._active_orchestrator.cancel()
+        # Disconnect Scribe WebSocket if active
+        scribe = getattr(demo._active_orchestrator, "_scribe", None)
+        if scribe:
+            try:
+                await scribe.disconnect()
+            except Exception:
+                pass
+        demo._active_orchestrator = None
+
+
+app = FastAPI(title="TriageNet API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
